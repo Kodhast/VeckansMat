@@ -6,8 +6,9 @@ h2 {
 	font-weight: 700;
 }
 
-/* Kodhäst's two dots before every section heading, set here once. */
-h2::before {
+/* Kodhäst's two dots before every section heading, set here once. A heading that is a fold
+   button (FoldCard) has none: its icon already leads, and the dots would sit on a line of their own. */
+h2:not(:has(> button))::before {
 	content: '';
 	display: inline-block;
 	width: 0.375em;
