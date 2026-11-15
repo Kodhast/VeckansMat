@@ -22,7 +22,7 @@ export class OfferError extends Error {}
 
 /** Says who is asking, so the chains can see it is one household's app and not a browser. */
 // ASCII only: a header is sent as bytes, and an å became a byte one chain could not read.
-const USER_AGENT = 'VeckansMat/1 (private household app; +https://github.com/ParTee71/VeckansMat)';
+const USER_AGENT = 'VeckansMat/1 (private household app; +https://github.com/Kodhast/VeckansMat)';
 const TIMEOUT_MS = 15_000;
 
 /**
