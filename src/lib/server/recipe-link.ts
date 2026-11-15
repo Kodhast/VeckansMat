@@ -28,7 +28,7 @@ export async function fetchPage(
 				headers: {
 					accept: 'text/html,application/xhtml+xml',
 					'user-agent':
-						'Mozilla/5.0 (compatible; VeckansMat; +https://github.com/ParTee71/VeckansMat)'
+						'Mozilla/5.0 (compatible; VeckansMat; +https://github.com/Kodhast/VeckansMat)'
 				},
 				redirect: 'manual',
 				signal

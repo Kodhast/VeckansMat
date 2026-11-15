@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const CONFLICT_LABEL = 'konflikt';
-const REPO = process.env.GITHUB_REPOSITORY ?? 'ParTee71/VeckansMat';
+const REPO = process.env.GITHUB_REPOSITORY ?? 'Kodhast/VeckansMat';
 
 /** What to do with the label, given GitHub's mergeable flag and whether the PR has it. */
 export function labelAction(mergeable, hasLabel) {

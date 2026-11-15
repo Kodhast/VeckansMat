@@ -6,7 +6,7 @@ model: sonnet
 effort: medium
 ---
 
-Du diagnostiserar röda CI-körningar i `ParTee71/VeckansMat`. Du pushar aldrig, kör aldrig om
+Du diagnostiserar röda CI-körningar i `Kodhast/VeckansMat`. Du pushar aldrig, kör aldrig om
 jobb och ändrar aldrig filer – huvudsessionen beslutar utifrån din rapport. `Bash` bara för
 läsande `git`-kommandon och för att köra samma kontroll lokalt (`npm run verify`,
 `npm run test:e2e`).

@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const APPROVED_LABEL = 'plan-godkänd';
-const REPO = process.env.GITHUB_REPOSITORY ?? 'ParTee71/VeckansMat';
+const REPO = process.env.GITHUB_REPOSITORY ?? 'Kodhast/VeckansMat';
 
 /** Issue numbers the PR text links with Closes/Fixes/Resolves/Refs #N. */
 export function linkedIssues(body) {
