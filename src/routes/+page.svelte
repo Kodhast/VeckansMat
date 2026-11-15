@@ -171,8 +171,13 @@
 		delete suggestingWeeks[weekStart];
 	}
 
+	// Days still being saved, which the question before a suggestion waits for: a day written by
+	// hand shows at once, but the week has it only when the server has answered.
+	let rowsSaving: Promise<unknown>[] = [];
+
 	// A week with nothing in it is suggested at once; otherwise the dialog asks first.
-	function askSuggest() {
+	async function askSuggest() {
+		await Promise.all(rowsSaving);
 		if (week.rows.length) asking = true;
 		else suggest();
 	}
@@ -239,13 +244,16 @@
 		if (text.trim() === textOf(weekday, meal)) return;
 		if (swapped?.key === k) swapped = null;
 		pending[k] = text.trim();
-		await post('row', {
+		const saving = post('row', {
 			weekStart: week.weekStart,
 			weekday,
 			meal,
 			text,
 			eaters: eaterIds
 		});
+		rowsSaving.push(saving);
+		await saving;
+		rowsSaving = rowsSaving.filter((s) => s !== saving);
 		// A newer text for the same day stays until its own answer comes.
 		if (pending[k] === text.trim()) delete pending[k];
 	}
