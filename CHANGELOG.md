@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.10.0
+
+- Appen bär Kodhästs signatur, samma som de andra apparna: hästen och "En kodhäst-app" i sidfoten, hästen i de tomma listorna, två prickar framför avsnittsrubrikerna och två prickar i appikonen. Allt i appens egna färger. (#162)
+
 ## 0.9.2
 
 - Inget märks i appen. Avsändaren mot butikssidor och receptlänkar pekar på repots nya adress efter flytten till Kodhast. (#165)
