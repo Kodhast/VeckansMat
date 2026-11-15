@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import AccountButton from '#lib/AccountButton.svelte';
+	import EmptyNote from '#lib/EmptyNote.svelte';
 	import { MEAL_LABELS } from '#lib/recipes.ts';
 	import { WEEKDAYS, weekDates, weekName } from '#lib/weeks.ts';
 	import type { PageProps } from './$types';
@@ -40,7 +41,7 @@
 	<h1 class="view-title">Veckor</h1>
 
 	{#if data.menus.length === 0}
-		<p class="empty">Inga veckor än. När ni har planerat en vecka hamnar den här.</p>
+		<EmptyNote>Inga veckor än. När ni har planerat en vecka hamnar den här.</EmptyNote>
 	{:else}
 		<m3e-accordion>
 			{#each data.menus as menu, i (menu.id)}
@@ -148,10 +149,6 @@
 
 	.other {
 		font-style: italic;
-		color: var(--md-sys-color-on-surface-variant);
-	}
-
-	.empty {
 		color: var(--md-sys-color-on-surface-variant);
 	}
 </style>

@@ -27,6 +27,31 @@ test('start page shows the version', async ({ page }) => {
 	await expect(page.getByText(`Version ${pkg.version}`)).toBeVisible();
 });
 
+test('the footer signs the app as a Kodhäst app under the version', async ({ page }) => {
+	await page.goto('/');
+	const footer = page.locator('footer');
+	await expect(footer).toContainText(`Version ${pkg.version}`);
+	await expect(footer).toContainText('En kodhäst-app');
+	// The mark is decoration; the line reads as its text alone.
+	await expect(footer.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+});
+
+test('section headings have the two dots and keep their names', async ({ page }) => {
+	await open(page, '/installningar');
+	const heading = page.getByRole('heading', { level: 2, name: 'Personer', exact: true });
+	await expect(heading).toBeVisible();
+	const dots = await heading.evaluate((el) => getComputedStyle(el, '::before').boxShadow);
+	expect(dots).not.toBe('none');
+});
+
+test('a folding card heading has no dots', async ({ page }) => {
+	await open(page, '/ratter');
+	const heading = page.locator('.card h2').first();
+	await expect(heading).toBeVisible();
+	const dots = await heading.evaluate((el) => getComputedStyle(el, '::before').content);
+	expect(dots).toBe('none');
+});
+
 test('a new version offers a reload that loads it', async ({ page }) => {
 	await open(page, '/');
 	await page.route('**/_app/version.json', (route) =>
