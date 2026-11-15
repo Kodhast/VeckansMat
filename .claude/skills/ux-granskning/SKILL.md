@@ -6,7 +6,7 @@ description: 'Granskar en vy, mockup eller skärmdump i VeckansMat för användb
 # UX-granskning
 
 Granskar en vy som den upplevs i telefonen. Bygger på Anthropics `design-critique` och
-`ux-copy` via `ParTee71/claude-android`, anpassad till webb, m3e och svenska. Nya vyer
+`ux-copy` via `Kodhast/claude-android`, anpassad till webb, m3e och svenska. Nya vyer
 skapas med `/mockup`, inte här.
 
 ## Underlag

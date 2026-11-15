@@ -7,7 +7,7 @@
 
 Hushållet ska kunna lita på att appen inte ändras mitt i en vecka utan att någon bestämt det,
 och det ska gå att se och backa vad som kör skarpt. Ägarens Android-appar har redan ett
-fungerande flöde (`release` i `ParTee71/claude-android`).
+fungerande flöde (`release` i `Kodhast/claude-android`).
 
 ## Beslut
 

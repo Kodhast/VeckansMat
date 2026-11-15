@@ -47,7 +47,7 @@ Projekttrådar startar i `/home/user`, ovanför repot, och läser då inte `.cla
   `VeckansMat:<namn>` när ett annat repo i tråden har en skill med samma namn. Agenter får
   aldrig prefix; en agent som finns i flera repon ska heta `<repo>-<namn>` (regeln i
   claude-android). `granskare` och `ci-doktor` är unika i dag.
-- **Hookarna** bär miljöns setup-skript (`scripts/repo-plugins.mjs` i `ParTee71/claude-android`)
+- **Hookarna** bär miljöns setup-skript (`scripts/repo-plugins.mjs` i `Kodhast/claude-android`)
   i pluginen `veckansmat`. De körs bara när händelsen rör repot: `verify-before-push` för en
   push i VeckansMat, `plan-approved` för en PR mot VeckansMat (claude-android #38), och
   sessionsstarten en gång.
