@@ -6,6 +6,19 @@ h2 {
 	font-weight: 700;
 }
 
+/* Kodhäst's two dots before every section heading, set here once. */
+h2::before {
+	content: '';
+	display: inline-block;
+	width: 0.375em;
+	height: 0.375em;
+	margin-right: 0.875em;
+	border-radius: 50%;
+	vertical-align: 0.15em;
+	background: var(--md-sys-color-primary);
+	box-shadow: 0.5em 0 0 var(--md-sys-color-primary);
+}
+
 /* A second line under a row's text. */
 .meta {
 	font-size: 0.8125rem;

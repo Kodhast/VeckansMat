@@ -9,6 +9,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import { provideFab } from '#lib/fab.svelte.ts';
 	import FloatingNav, { destinations } from '#lib/FloatingNav.svelte';
+	import KodhastMark from '#lib/KodhastMark.svelte';
 	import { neighbour, swipeNav, type Direction } from '#lib/swipe.ts';
 	import { loadTheme, theme } from '#lib/theme.svelte.ts';
 	import { themeOf } from '#lib/themes.ts';
@@ -103,7 +104,10 @@
 	<div class="app">
 		<div class="content" class:floating={showNav} {@attach showNav && swipe}>
 			{@render children()}
-			<footer>Version {version}</footer>
+			<footer>
+				<span>Version {version}</span>
+				<span class="signature"><KodhastMark size="1rem" />En kodhäst-app</span>
+			</footer>
 		</div>
 		{#if showNav}
 			<div class="fade"></div>
@@ -236,9 +240,18 @@
 	}
 
 	footer {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
 		padding: 1rem;
-		text-align: center;
 		font-size: 0.75rem;
 		opacity: 0.7;
+	}
+
+	.signature {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
 	}
 </style>

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import AccountButton from '#lib/AccountButton.svelte';
+	import EmptyNote from '#lib/EmptyNote.svelte';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
 	import SubmitButton from '#lib/SubmitButton.svelte';
@@ -155,7 +156,7 @@
 	{/if}
 
 	{#if recipes.length === 0}
-		<p class="empty">Inga rätter än. Skriv namnet på en rätt ovan och lägg till den.</p>
+		<EmptyNote>Inga rätter än. Skriv namnet på en rätt ovan och lägg till den.</EmptyNote>
 	{:else}
 		{#each groups as group (group.key)}
 			<!-- While searching, every sort with a match is open, and stays so. -->
@@ -233,10 +234,6 @@
 		justify-content: space-between;
 		gap: 0.5rem;
 		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
-	}
-
-	.empty {
 		color: var(--md-sys-color-on-surface-variant);
 	}
 
