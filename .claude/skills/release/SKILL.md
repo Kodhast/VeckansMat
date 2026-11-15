@@ -5,7 +5,7 @@ description: 'Versioner och releaser i VeckansMat – regeln för versionshöjni
 
 # Versioner och release
 
-Anpassad från `release` i `ParTee71/claude-android`. Varför: [beslut 0011](../../../docs/beslut/0011-versioner-och-release.md).
+Anpassad från `release` i `Kodhast/claude-android`. Varför: [beslut 0011](../../../docs/beslut/0011-versioner-och-release.md).
 
 ## Versionshöjning i funktions-PR:en
 

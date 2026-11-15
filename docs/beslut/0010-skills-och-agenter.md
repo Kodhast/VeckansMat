@@ -9,7 +9,7 @@
 Svelte, Cloudflare och Playwright har egna skills och agenter för Claude, skrivna av teamen
 bakom ramverken. De läser aktuell dokumentation och, för Svelte, kontrollerar koden. Claudes
 minne av ramverken är äldre än så: Svelte 5 skrivs lätt som Svelte 4. Ägarens egna Android-appar
-delar arbetsflödet i `ParTee71/claude-android`, som har fungerat i flera repon.
+delar arbetsflödet i `Kodhast/claude-android`, som har fungerat i flera repon.
 
 ## Beslut
 
