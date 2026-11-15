@@ -6,6 +6,7 @@ Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ä
 ## 0.10.0
 
 - Appen bär Kodhästs signatur, samma som de andra apparna: hästen och "En kodhäst-app" i sidfoten, hästen i de tomma listorna, två prickar framför avsnittsrubrikerna och två prickar i appikonen. Allt i appens egna färger. (#162)
+- Föreslå veckan direkt efter att en dag skrivits in frågar nu alltid först om Claude ska fylla i resten eller hela veckan. Förut kunde frågan hoppas över om dagen inte hunnit sparas.
 
 ## 0.9.2
 

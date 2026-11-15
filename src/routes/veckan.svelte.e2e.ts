@@ -236,8 +236,15 @@ test('Claude suggests the week, and a day is swapped with one tap', async ({ pag
 	await expect(page.getByRole('alert')).toHaveText(/Claude kunde inte föreslå något just nu/);
 	await expect(page.getByRole('button', { name: 'Middag måndag: tom' })).toBeVisible();
 
-	// A wish stays while a day is written by hand, and the day stays when Claude suggests.
+	// A wish stays while a day is written by hand, and the day stays when Claude suggests. The
+	// question waits for the day to be saved, even when Föreslå veckan is tapped before that.
 	await page.getByLabel('Något särskilt den här veckan?').fill('Något med pumpa');
+	let saveRow!: () => void;
+	const rowHeld = new Promise<void>((resolve) => (saveRow = resolve));
+	await page.route(/\?\/row$/, async (route) => {
+		await rowHeld;
+		await route.continue();
+	});
 	await page.getByRole('button', { name: /^Middag tisdag/ }).click();
 	await page.getByRole('textbox', { name: 'Middag tisdag' }).fill('Ärtsoppa');
 	await page.keyboard.press('Enter');
@@ -245,7 +252,9 @@ test('Claude suggests the week, and a day is swapped with one tap', async ({ pag
 	await expect(page.getByRole('button', { name: 'Middag tisdag: Ärtsoppa' })).toBeVisible();
 	await expect(page.getByLabel('Något särskilt den här veckan?')).toHaveValue('Något med pumpa');
 	await page.locator('m3e-button', { hasText: 'Föreslå veckan' }).click();
+	saveRow();
 	const dialog = page.locator('m3e-dialog');
+	await expect(dialog).toHaveAttribute('open');
 	await expect(dialog).toContainText('Föreslå veckan?');
 	await expect(dialog).toContainText('Du har skrivit in tisdag själv.');
 	await dialog.locator('m3e-button', { hasText: 'Fyll i resten' }).click();
