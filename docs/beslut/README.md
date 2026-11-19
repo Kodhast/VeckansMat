@@ -30,3 +30,4 @@ med `/adr` i Claude Code.
 | [0023](0023-erbjudanden.md)                        | Erbjudanden från butiker                        | Beslutat                                          |
 | [0024](0024-plan-bara-for-storre-andringar.md)     | Plan bara för större ändringar                  | Beslutat                                          |
 | [0025](0025-arbetsflodets-stomme-fran-pluginen.md) | Arbetsflödets stomme från pluginen              | Beslutat                                          |
+| [0026](0026-bara-chrome.md)                        | Bara Chrome på dator och Android                | Beslutat                                          |
