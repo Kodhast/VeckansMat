@@ -51,7 +51,7 @@ test('a week is written as quickly as on a note', async ({ page }) => {
 
 	// The new dish is a recipe with just a name, and the week is among the old weeks.
 	await open(page, '/ratter');
-	await expect(page.locator('m3e-list-action', { hasText: 'Ärtgryta med bacon' })).toBeVisible();
+	await expect(page.locator('a.kh-row', { hasText: 'Ärtgryta med bacon' })).toBeVisible();
 
 	// Emptying a day takes it off the week.
 	await open(page, '/');
@@ -131,7 +131,7 @@ test('a day is chosen without writing, from the usual dishes or all of them', as
 	await reload(page);
 	await expect(page.getByRole('button', { name: 'Middag söndag: Ugnsomelett' })).toBeVisible();
 	await open(page, '/ratter');
-	await expect(page.locator('m3e-list-action', { hasText: 'Ugnsomelett' })).toBeVisible();
+	await expect(page.locator('a.kh-row', { hasText: 'Ugnsomelett' })).toBeVisible();
 
 	// The day is left as it was.
 	await open(page, '/');
@@ -358,7 +358,7 @@ test('a new dish is voted on with one button, and Aldrig mer is never suggested'
 
 	// Rätter marks it, and the dish page shows the same vote and changes it.
 	await open(page, '/ratter');
-	const dish = page.locator('m3e-list-action', { hasText: 'Shakshuka' });
+	const dish = page.locator('a.kh-row', { hasText: 'Shakshuka' });
 	await expect(dish.getByRole('img', { name: 'Aldrig mer' })).toBeVisible();
 	await dish.click();
 	await expect(vote('Shakshuka')).toHaveText('Aldrig mer');

@@ -58,7 +58,7 @@ test('section headings have the two dots and keep their names', async ({ page })
 
 test('a folding card heading has no dots', async ({ page }) => {
 	await open(page, '/ratter');
-	const heading = page.locator('.card h2').first();
+	const heading = page.locator('.kh-card h2').first();
 	await expect(heading).toBeVisible();
 	const dots = await heading.evaluate((el) => getComputedStyle(el, '::before').content);
 	expect(dots).toBe('none');

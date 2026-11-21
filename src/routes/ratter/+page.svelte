@@ -6,13 +6,12 @@
 	import EmptyNote from '#lib/EmptyNote.svelte';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
-	import SubmitButton from '#lib/SubmitButton.svelte';
+	import Snackbar from '#lib/Snackbar.svelte';
 	import { useToolbarAction } from '#lib/toolbar.svelte.ts';
 	import { recipeUrl } from '#lib/links.ts';
 	import { nameKey } from '#lib/names.ts';
 	import { byName, byOften, CATEGORIES, categoryLook, matching } from '#lib/recipes.ts';
 	import { eatenText } from '#lib/weeks.ts';
-	import type { M3eSnackbarElement } from '@m3e/web/snackbar';
 	import type { RecipeSummary } from '#lib/server/db/recipes.ts';
 	import type { PageProps, SubmitFunction } from './$types';
 
@@ -91,14 +90,34 @@
 					vote: null
 				});
 				query = '';
+				justAdded = { id, name };
 			}
 		};
 	};
 
-	function openAdded(event: ToggleEvent & { currentTarget: M3eSnackbarElement }) {
-		if (event.newState === 'closed' && event.currentTarget.isActionTaken && form?.added) {
-			goto(resolve('/ratter/[id]', { id: String(form.added.id) }));
-		}
+	// The arrows move the choice, as in a group of radio buttons, and the focus goes with it.
+	function step(event: KeyboardEvent & { currentTarget: HTMLElement }) {
+		const by = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
+		if (!by) return;
+		event.preventDefault();
+		const i = (orders.findIndex(([value]) => value === order) + by + orders.length) % orders.length;
+		order = orders[i][0];
+		(event.currentTarget.children[i] as HTMLElement).focus();
+	}
+
+	// The button goes when the field is empty, so the focus goes back to the field.
+	let search: HTMLInputElement | undefined = $state();
+	function clear() {
+		query = '';
+		search?.focus();
+	}
+
+	// The dish just added, which the message offers to open.
+	let justAdded = $state<{ id: number; name: string } | null>(null);
+	function openAdded(open: boolean) {
+		const dish = justAdded;
+		justAdded = null;
+		if (open && dish) goto(resolve('/ratter/[id]', { id: String(dish.id) }));
 	}
 </script>
 
@@ -110,24 +129,30 @@
 
 <main>
 	<form method="POST" action="?/add" use:enhance={add}>
-		<m3e-search-bar clearable clear-label="Rensa">
-			<span slot="leading" class="slot-icon"><Icon name="search" /></span>
+		<label class="kh-field">
 			<input
-				slot="input"
+				class="kh-field__input"
 				name="name"
 				type="search"
 				autocomplete="off"
-				placeholder="Sök eller lägg till rätt"
+				placeholder=" "
 				aria-label="Sök eller lägg till rätt"
 				bind:value={query}
+				bind:this={search}
 			/>
-		</m3e-search-bar>
+			<span class="kh-field__label">Sök eller lägg till rätt</span>
+			{#if query}
+				<button type="button" class="kh-icon-btn" aria-label="Rensa" onclick={clear}>
+					<Icon name="close" />
+				</button>
+			{:else}
+				<Icon name="search" />
+			{/if}
+		</label>
 		{#if link}
-			<SubmitButton variant="filled" size="medium" icon="link">Hämta receptet</SubmitButton>
+			<button class="kh-btn"><Icon name="link" />Hämta receptet</button>
 		{:else if key && !exact}
-			<SubmitButton variant="filled" size="medium" icon="add"
-				>Lägg till ”{query.trim()}”</SubmitButton
-			>
+			<button class="kh-btn"><Icon name="add" />Lägg till ”{query.trim()}”</button>
 		{/if}
 		{#if form?.error}
 			<p class="error-text" role="alert">{form.error}</p>
@@ -135,17 +160,17 @@
 	</form>
 
 	{#if !key}
-		<div class="order">
-			<m3e-button-group variant="connected">
-				{#each orders as [value, label] (value)}
-					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-					<m3e-button
-						variant={order === value ? 'filled' : 'tonal'}
-						aria-pressed={order === value}
-						onclick={() => (order = value)}>{label}</m3e-button
-					>
-				{/each}
-			</m3e-button-group>
+		<!-- svelte-ignore a11y_interactive_supports_focus (the focus is on the radio buttons) -->
+		<div class="kh-segmented" role="radiogroup" aria-label="Ordning" onkeydown={step}>
+			{#each orders as [value, label] (value)}
+				<button
+					type="button"
+					role="radio"
+					aria-checked={order === value}
+					tabindex={order === value ? 0 : -1}
+					onclick={() => (order = value)}>{label}</button
+				>
+			{/each}
 		</div>
 	{:else if shown.length > 0 && !exact && !link}
 		<h2>Liknande rätter</h2>
@@ -162,34 +187,37 @@
 				count={group.recipes.length}
 				bind:open={() => !!key || !folded[group.key], (open) => key || fold(group.key, open)}
 			>
-				<m3e-list>
+				<ul>
 					{#each group.recipes as recipe (recipe.id)}
-						<m3e-list-action href="/ratter/{recipe.id}">
-							<span
-								>{recipe.name}{#if recipe.vote === 'favorit'}<span
-										class="vote"
-										role="img"
-										aria-label="Favorit"><Icon name="thumbUp" /></span
-									>{:else if recipe.vote === 'aldrig'}<span
-										class="vote never"
-										role="img"
-										aria-label="Aldrig mer"><Icon name="thumbUp" /></span
-									>{/if}</span
-							>
-							<span slot="trailing" class="meta">{eatenText(recipe)}</span>
-						</m3e-list-action>
+						<li>
+							<a class="kh-row" href={resolve('/ratter/[id]', { id: String(recipe.id) })}>
+								<span class="kh-row__text">
+									<span class="kh-row__title"
+										>{recipe.name}{#if recipe.vote === 'favorit'}<span
+												class="vote"
+												role="img"
+												aria-label="Favorit"><Icon name="thumbUp" /></span
+											>{:else if recipe.vote === 'aldrig'}<span
+												class="vote never"
+												role="img"
+												aria-label="Aldrig mer"><Icon name="thumbUp" /></span
+											>{/if}</span
+									>
+									<span class="kh-row__subtitle meta">{eatenText(recipe)}</span>
+								</span>
+								<span class="kh-chevron"></span>
+							</a>
+						</li>
 					{/each}
-				</m3e-list>
+				</ul>
 			</FoldCard>
 		{/each}
 	{/if}
 </main>
 
-{#key form?.added}
-	{#if form?.added}
-		<m3e-snackbar action="Öppna" duration="6000" open ontoggle={openAdded}>
-			{form.added.name} är tillagd
-		</m3e-snackbar>
+{#key justAdded}
+	{#if justAdded}
+		<Snackbar text="{justAdded.name} är tillagd" action="Öppna" onclose={openAdded} />
 	{/if}
 {/key}
 
@@ -205,9 +233,8 @@
 
 	h2 {
 		margin: 0.25rem 0 0 0.25rem;
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--md-sys-color-on-surface-variant);
+		font: var(--kh-type-item-subtitle);
+		color: var(--kh-on-surface-variant);
 	}
 
 	form {
@@ -216,28 +243,21 @@
 		gap: 0.875rem;
 	}
 
-	.order {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
+	/* web-ui's field has its own button to clear it. */
+	input::-webkit-search-cancel-button {
+		appearance: none;
 	}
 
-	/* Compact rows, as in Handla. */
-	m3e-list {
-		--m3e-list-item-container-color: transparent;
-		--m3e-list-item-one-line-height: 2.875rem;
-		--m3e-list-item-one-line-top-space: 0.25rem;
-		--m3e-list-item-one-line-bottom-space: 0.25rem;
-		padding-bottom: 0.25rem;
+	ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
 
 	.vote {
 		margin-left: 0.25rem;
 		vertical-align: -0.125rem;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	.vote :global(svg) {
@@ -246,7 +266,7 @@
 	}
 
 	.never {
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.never :global(svg) {
@@ -254,9 +274,6 @@
 	}
 
 	.meta {
-		font-size: 0.75rem;
-		color: var(--md-sys-color-on-surface-variant);
 		font-variant-numeric: tabular-nums;
-		white-space: nowrap;
 	}
 </style>

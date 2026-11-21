@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { postAction } from '#lib/actions.ts';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
@@ -66,56 +67,59 @@
 	<title>{recipe.name} – Veckans mat</title>
 </svelte:head>
 
-<header>
-	<m3e-icon-button href="/ratter" aria-label="Tillbaka till rätter">
+<header class="kh-topbar">
+	<a
+		class="kh-icon-btn kh-icon-btn--tonal"
+		href={resolve('/ratter')}
+		aria-label="Tillbaka till rätter"
+	>
 		<Icon name="back" />
-	</m3e-icon-button>
-	<m3e-icon-button href="/ratter/{recipe.id}/redigera" aria-label="Redigera">
-		<Icon name="edit" />
-	</m3e-icon-button>
+	</a>
+	<h1 class="kh-topbar__title"><kh-dots></kh-dots><span>{recipe.name}</span></h1>
+	<div class="kh-topbar__actions">
+		<a
+			class="kh-icon-btn"
+			href={resolve('/ratter/[id]/redigera', { id: String(recipe.id) })}
+			aria-label="Redigera"
+		>
+			<Icon name="edit" />
+		</a>
+	</div>
 </header>
 
-<main>
-	<div class="title">
-		{#if category || base}
-			<p class="label">
+<main class="kh-page">
+	<section class="kh-card">
+		{#if category || base || facts.length || vote === 'favorit'}
+			<ul class="kh-pills">
 				{#if category}
-					<span class="sort" style:background={category.tint} style:color={category.ink}>
-						<Icon name={category.key} />
-					</span>
-					<span>{category.label}</span>
+					<li
+						class="kh-pill"
+						style:--kh-tone-container={category.tint}
+						style:--kh-tone-content={category.ink}
+					>
+						<Icon name={category.key} />{category.label}
+					</li>
 				{/if}
-				{#if category && base}·{/if}
-				{#if base}<span>{base.label}</span>{/if}
-			</p>
-		{/if}
-		<h1>{recipe.name}</h1>
-		<p class="eaten">{eaten}</p>
-		{#if facts.length || vote === 'favorit'}
-			<ul class="facts">
+				{#if base}<li class="kh-pill">{base.label}</li>{/if}
 				{#if vote === 'favorit'}
-					<li class="favourite">
+					<li class="kh-pill">
 						<Icon name="thumbUp" />Favorit · får komma efter {weeksText(data.favouriteWeeks)}
 					</li>
 				{/if}
-				{#each facts as fact, i (i)}<li>{fact}</li>{/each}
+				{#each facts as fact, i (i)}<li class="kh-pill">{fact}</li>{/each}
 			</ul>
 		{/if}
+		<p class="meta">{eaten}</p>
 		{#if recipe.categoryGuessed}
 			<p class="meta">Sort och bas gissade av Claude. Ändra under Redigera.</p>
 		{/if}
-	</div>
-
-	<m3e-button class="cook" variant="filled" size="medium" href="/ratter/{recipe.id}/laga">
-		<span slot="icon" class="slot-icon"><Icon name="cook" /></span>Laga maten
-	</m3e-button>
-
-	<section class="card opinion">
-		<div class="opinion-row">
-			<h2>Vad tycker ni?</h2>
+		<div class="actions">
+			<a class="kh-btn cook" href={resolve('/ratter/[id]/laga', { id: String(recipe.id) })}>
+				<Icon name="cook" />Laga maten
+			</a>
 			<VoteButton name={recipe.name} {vote} onvote={setVote} />
 		</div>
-		<p class="hint">
+		<p class="meta">
 			Tumme ner: Claude föreslår inte rätten igen, men den går att skriva in själv.
 		</p>
 		{#if voteFailed}
@@ -171,161 +175,62 @@
 	{/if}
 	{#if recipe.weeks.length}
 		<FoldCard title="Veckor med rätten" count={recipe.weeks.length} open={onlyName}>
-			<m3e-list>
-				{#each recipe.weeks as week, i (i)}
-					<m3e-list-action href="/veckor#vecka-{week.menuId}">
-						{weekName(week.weekStart)}
-						<span slot="trailing">{MEAL_LABELS[week.meal]}</span>
-					</m3e-list-action>
-				{/each}
-			</m3e-list>
+			{#each recipe.weeks as week, i (i)}
+				<a class="kh-row" href="{resolve('/veckor')}#vecka-{week.menuId}">
+					<span class="kh-row__text"
+						><span class="kh-row__title">{weekName(week.weekStart)}</span></span
+					>
+					<span class="kh-row__subtitle">{MEAL_LABELS[week.meal]}</span>
+				</a>
+			{/each}
 		</FoldCard>
 	{/if}
 </main>
 
 <style>
-	header {
-		max-width: 40rem;
-		margin: 0 auto;
-		padding: 0.5rem 0.5rem 0;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
 	main {
-		max-width: 40rem;
-		margin: 0 auto;
-		padding: 0 0.875rem 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.625rem;
+		gap: var(--kh-space-m);
+		padding-block: var(--kh-space-s) var(--kh-space-l);
 	}
 
-	.title {
-		margin: 0.125rem 0.375rem 0.25rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.375rem;
-	}
-
-	.title p {
+	.kh-pills {
 		margin: 0;
-	}
-
-	.label {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--md-sys-color-primary);
-	}
-
-	.sort {
-		width: 1.375rem;
-		height: 1.375rem;
-		border-radius: 0.4375rem;
-		display: grid;
-		place-items: center;
-	}
-
-	.sort :global(svg) {
-		width: 0.8125rem;
-		height: 0.8125rem;
-	}
-
-	h1 {
-		margin: 0;
-		font-size: 1.875rem;
-		line-height: 2.25rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-		overflow-wrap: anywhere;
-	}
-
-	.eaten {
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
-	}
-
-	.facts {
-		list-style: none;
-		margin: 0.375rem 0 0;
 		padding: 0;
+		list-style: none;
+	}
+
+	.meta {
+		margin: 0;
+		font: var(--kh-type-item-subtitle);
+		color: var(--kh-on-surface-variant);
+	}
+
+	.actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.375rem;
-	}
-
-	.facts .favourite {
-		gap: 0.375rem;
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
-	}
-
-	.favourite :global(svg) {
-		width: 1rem;
-		height: 1rem;
-	}
-
-	.facts li {
-		min-height: 1.875rem;
-		padding: 0 0.75rem;
-		box-sizing: border-box;
-		border-radius: 0.9375rem;
-		background: var(--app-card);
-		box-shadow: var(--app-card-shadow);
-		font-size: 0.8125rem;
-		font-weight: 500;
-		color: var(--md-sys-color-on-surface-variant);
-		display: flex;
-		align-items: center;
+		gap: var(--kh-space-s);
 	}
 
 	.cook {
-		align-self: stretch;
-	}
-
-	.opinion-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.75rem;
-	}
-
-	.opinion h2 {
-		margin: 0;
-		font-size: 1rem;
-		font-weight: 500;
-	}
-
-	.opinion p {
-		margin: 0;
-	}
-
-	.hint {
-		font-size: 0.8125rem;
-		line-height: 1.25rem;
-		color: var(--md-sys-color-on-surface-variant);
+		flex: 1;
 	}
 
 	.lines {
 		margin: 0;
-		padding: 0 0 0.5rem;
+		padding: 0 0 var(--kh-space-xs);
 		list-style: none;
 	}
 
 	.lines li {
 		min-height: 2.375rem;
-		padding: 0.375rem 1.125rem;
+		padding: 0.375rem var(--kh-space-l);
 		box-sizing: border-box;
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		line-height: 1.375rem;
+		gap: var(--kh-space-m);
+		font: var(--kh-type-body);
 	}
 
 	.lines li::before {
@@ -334,28 +239,27 @@
 		height: 0.3125rem;
 		flex-shrink: 0;
 		border-radius: 50%;
-		background: var(--md-sys-color-outline-variant);
+		background: var(--kh-outline-variant);
 	}
 
 	.steps {
 		margin: 0;
-		padding: 0.125rem 1.125rem 0.625rem;
+		padding: 0.125rem var(--kh-space-l) var(--kh-space-s);
 		list-style: none;
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: var(--kh-space-m);
 	}
 
 	.steps li {
 		display: flex;
-		gap: 0.75rem;
-		line-height: 1.4375rem;
+		gap: var(--kh-space-m);
+		font: var(--kh-type-body);
 		white-space: pre-line;
 	}
 
 	.part {
-		margin-top: 0.25rem;
-		font-size: 0.875rem;
+		margin-top: var(--kh-space-xs);
 		font-weight: 700;
 	}
 
@@ -364,27 +268,21 @@
 		height: 1.5rem;
 		flex-shrink: 0;
 		border-radius: 0.75rem;
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
-		font-size: 0.75rem;
-		font-weight: 700;
+		background: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
+		font: var(--kh-type-caption);
 		display: grid;
 		place-items: center;
 	}
 
 	.source {
 		margin: 0;
-		padding: 0.25rem 1.125rem 0.75rem;
-		font-size: 0.8125rem;
-		color: var(--md-sys-color-on-surface-variant);
+		padding: var(--kh-space-xs) var(--kh-space-l) var(--kh-space-m);
+		font: var(--kh-type-item-subtitle);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.source a {
-		color: var(--md-sys-color-primary);
-	}
-
-	m3e-list {
-		--m3e-list-item-container-color: transparent;
-		padding-bottom: 0.25rem;
+		color: var(--kh-primary);
 	}
 </style>
