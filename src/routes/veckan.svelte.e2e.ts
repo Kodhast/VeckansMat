@@ -408,7 +408,7 @@ test('the pot on a dish opens it for cooking that day, and a tap still writes', 
 	await expect(page.getByRole('textbox')).toHaveCount(0);
 
 	// Back goes to the same week on Veckan.
-	await page.locator('m3e-icon-button[aria-label="Tillbaka"]').click();
+	await page.getByRole('link', { name: 'Tillbaka' }).click();
 	await expect(page).toHaveURL(/\/\?vecka=\d{4}-\d{2}-\d{2}$/);
 	await expect(page.getByRole('button', { name: 'Middag onsdag: Fiskgratäng' })).toBeVisible();
 

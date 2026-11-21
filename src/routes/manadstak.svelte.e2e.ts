@@ -9,7 +9,7 @@ test('nothing more is read once the month has cost the cap', async ({ page }) =>
 	await read(page, 'Dyr gryta');
 	await expect(page.getByLabel('Namn')).toHaveValue('Dyr gryta');
 
-	await page.getByRole('button', { name: 'Börja om' }).click();
+	await page.getByRole('link', { name: 'Börja om' }).click();
 	await read(page, 'Pannkakor');
 	await expect(page.getByRole('alert')).toHaveText(
 		'Appen har läst så många recept som månadens tak tillåter. Fyll i det själv, eller vänta till nästa månad.'

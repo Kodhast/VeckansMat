@@ -127,8 +127,11 @@ test('Claude sorts the dishes in the background, and a sort chosen by hand stays
 
 	await page.getByRole('link', { name: 'Redigera' }).click();
 	await expect(page.getByText('Claude gissade sort och bas.')).toBeVisible();
+	// The guessed sort and base show as chosen, and a tap moves the choice.
+	await expect(page.locator('.kh-chip--selected')).toHaveText(['Fisk', 'Potatis']);
 	await page.getByText('Kött', { exact: true }).click();
 	await page.getByText('Ris', { exact: true }).click();
+	await expect(page.locator('.kh-chip--selected')).toHaveText(['Kött', 'Ris']);
 	await page.getByRole('button', { name: 'Spara' }).click();
 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Viltgryta');

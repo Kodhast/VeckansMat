@@ -39,7 +39,7 @@ test('a dish is cooked from its page, with portions, ticks and a timer', async (
 	await expect(ingredient(page, 'salt och peppar')).toBeVisible();
 
 	// More portions scale the amounts, for this time only.
-	const more = page.locator('m3e-icon-button[aria-label="Fler portioner"]');
+	const more = page.getByRole('button', { name: 'Fler portioner' });
 	for (let i = 0; i < 4; i++) await more.click();
 	await expect(page.getByText('Ändrat från 2.')).toBeVisible();
 	await expect(page.getByText('6 portioner')).toBeVisible();
@@ -69,7 +69,7 @@ test('a dish is cooked from its page, with portions, ticks and a timer', async (
 
 	// The step that names a time has a timer, which counts down and says when it is done.
 	await page.clock.install();
-	await page.locator('m3e-button', { hasText: 'Starta 20 min' }).click();
+	await page.getByRole('button', { name: 'Starta 20 min' }).click();
 	const timer = page.getByRole('timer');
 	await expect(timer).toContainText('20:00');
 	await expect(timer).toContainText('Steg 2');
@@ -78,11 +78,11 @@ test('a dish is cooked from its page, with portions, ticks and a timer', async (
 	await page.clock.fastForward(19 * 60_000);
 	await expect(timer).toContainText('Klart!');
 	await expect(page.getByRole('alert')).toHaveText('Timern för steg 2 är klar');
-	await page.locator('m3e-button', { hasText: 'Stäng' }).click();
+	await page.getByRole('button', { name: /^Stäng timern/ }).click();
 	await expect(timer).toHaveCount(0);
 
 	// Back leads to the dish.
-	await page.locator('m3e-icon-button[aria-label="Tillbaka"]').click();
+	await page.getByRole('link', { name: 'Tillbaka' }).click();
 	await expect(page).toHaveURL(/\/ratter\/\d+$/);
 	await saved(page);
 });
