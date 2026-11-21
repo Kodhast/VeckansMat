@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import AppHeader from '#lib/AppHeader.svelte';
 	import EmptyNote from '#lib/EmptyNote.svelte';
+	import FoldCard from '#lib/FoldCard.svelte';
 	import { MEAL_LABELS } from '#lib/recipes.ts';
 	import { WEEKDAYS, weekDates, weekName } from '#lib/weeks.ts';
 	import type { PageProps } from './$types';
@@ -14,6 +15,8 @@
 	let target = $state('');
 	onMount(() => (target = location.hash));
 	const isOpen = (id: number, index: number) => (target ? target === `#vecka-${id}` : index === 0);
+	// A week opened or folded by hand stays so.
+	let folded = $state<Record<number, boolean>>({});
 
 	const meals = Object.entries(MEAL_LABELS);
 
@@ -39,39 +42,43 @@
 	{#if data.menus.length === 0}
 		<EmptyNote>Inga veckor än. När ni har planerat en vecka hamnar den här.</EmptyNote>
 	{:else}
-		<m3e-accordion>
-			{#each data.menus as menu, i (menu.id)}
-				<m3e-expansion-panel id="vecka-{menu.id}" open={isOpen(menu.id, i) || undefined}>
-					<span slot="header" class="header">
-						<span class="week">{weekName(menu.weekStart)}</span>
-						<span class="sub">{subtitle(menu)}</span>
-					</span>
-					{#each meals as [meal, label] (meal)}
-						<!-- A week planned in the app keeps its lines in the order they were written. -->
-						{@const items = menu.items
-							.filter((item) => item.meal === meal)
-							.toSorted((a, b) => (a.weekday ?? 0) - (b.weekday ?? 0))}
-						{#if items.length}
-							<h2>{label}</h2>
-							<ul>
-								{#each items as item, j (j)}
-									<li>
-										<span class="day">{item.weekday ? WEEKDAYS[item.weekday - 1] : ''}</span>
-										{#if item.recipeId}
-											<a href={resolve('/ratter/[id]', { id: String(item.recipeId) })}
-												>{item.text}</a
-											>
-										{:else}
-											<span class="other">{item.text}</span>
-										{/if}
-									</li>
-								{/each}
-							</ul>
-						{/if}
-					{/each}
-				</m3e-expansion-panel>
-			{/each}
-		</m3e-accordion>
+		{#each data.menus as menu, i (menu.id)}
+			<div id="vecka-{menu.id}" class="week">
+				<FoldCard
+					title={weekName(menu.weekStart)}
+					note={subtitle(menu)}
+					bind:open={
+						() => folded[menu.id] ?? isOpen(menu.id, i), (open) => (folded[menu.id] = open)
+					}
+				>
+					<div class="body">
+						{#each meals as [meal, label] (meal)}
+							<!-- A week planned in the app keeps its lines in the order they were written. -->
+							{@const items = menu.items
+								.filter((item) => item.meal === meal)
+								.toSorted((a, b) => (a.weekday ?? 0) - (b.weekday ?? 0))}
+							{#if items.length}
+								<h3>{label}</h3>
+								<ul>
+									{#each items as item, j (j)}
+										<li>
+											<span class="day">{item.weekday ? WEEKDAYS[item.weekday - 1] : ''}</span>
+											{#if item.recipeId}
+												<a href={resolve('/ratter/[id]', { id: String(item.recipeId) })}
+													>{item.text}</a
+												>
+											{:else}
+												<span class="other">{item.text}</span>
+											{/if}
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						{/each}
+					</div>
+				</FoldCard>
+			</div>
+		{/each}
 	{/if}
 </main>
 
@@ -79,34 +86,27 @@
 	main {
 		max-width: 40rem;
 		margin: 0 auto;
-		padding: 1rem;
-	}
-
-	.header {
+		padding: var(--kh-space-l);
 		display: flex;
 		flex-direction: column;
-		min-width: 0;
+		gap: var(--kh-space-m);
 	}
 
+	/* A link to a week lands with the week under the header. */
 	.week {
-		font-weight: 700;
+		scroll-margin-top: 5rem;
 	}
 
-	.sub {
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+	.body {
+		padding: 0 var(--kh-space-m) var(--kh-space-s);
 	}
 
-	h2 {
-		margin: 0.5rem 0 0.125rem;
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.04em;
+	h3 {
+		margin: var(--kh-space-s) 0 0.125rem;
+		font: var(--kh-type-caption);
+		letter-spacing: var(--kh-tracking-caption);
 		text-transform: uppercase;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	ul {
@@ -119,14 +119,15 @@
 		min-height: 2.75rem;
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
+		gap: var(--kh-space-m);
+		font: var(--kh-type-body);
 	}
 
 	.day {
 		width: 2rem;
 		flex-shrink: 0;
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
+		font: var(--kh-type-item-subtitle);
+		color: var(--kh-on-surface-variant);
 	}
 
 	a {
@@ -140,6 +141,6 @@
 
 	.other {
 		font-style: italic;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 </style>

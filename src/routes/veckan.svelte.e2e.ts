@@ -148,7 +148,7 @@ test('who eats is chosen per week, and nothing more is set there', async ({ page
 		await page.getByLabel('Namn').fill(name);
 		await page.getByLabel('Krav').fill(`${name} äter inte svamp`);
 		await page.getByRole('button', { name: 'Spara' }).click();
-		await expect(page.locator('m3e-list-action', { hasText: name })).toBeVisible();
+		await expect(page.locator('a.kh-row', { hasText: name })).toBeVisible();
 	}
 
 	await open(page, '/');
@@ -180,9 +180,10 @@ test('who eats is chosen per week, and nothing more is set there', async ({ page
 	// The people are made up for this test, so they are removed again.
 	for (const name of people) {
 		await open(page, '/installningar');
-		await page.locator('m3e-list-action', { hasText: name }).click();
-		await page.getByRole('button', { name: `Ta bort ${name}` }).click();
-		await expect(page.locator('m3e-list-action', { hasText: name })).toHaveCount(0);
+		await page.locator('a.kh-row', { hasText: name }).click();
+		await page.getByRole('button', { name: `Radera ${name}` }).click();
+		await page.getByRole('dialog').getByRole('button', { name: 'Radera', exact: true }).click();
+		await expect(page.locator('a.kh-row', { hasText: name })).toHaveCount(0);
 	}
 });
 

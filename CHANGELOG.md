@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.18.0
+
+- Veckor och Inställningar har Kodhästs utfällbara kort, topprad, rader, fält, stegare, segmentval och reglage, som i Android-apparna (#174). En person raderas med Radera, som frågar först eftersom det inte går att ångra.
+
 ## 0.17.0
 
 - Handla har Kodhästs kryssrad, svep, knappar, kort och meddelanden, som i Android-apparna (#174): en vara kryssas med den runda kryssrutan, sveps åt vänster för att tas bort (en tredjedel av raden, eller ett snabbt drag, räcker nu) och kommer tillbaka med Ångra. Raden för en ny vara och butiksväljaren i Inställningar har Kodhästs fält och ark.
