@@ -245,19 +245,22 @@
 		>
 			<ul class="lines">
 				{#each lines as line, i (i)}
-					{@const have = ticks.have.includes(i)}
-					<li class:have>
-						<!-- m3e's checkbox until web-ui has the check row (#174). -->
-						<!-- svelte-ignore a11y_label_has_associated_control (m3e-checkbox is the control; a tap anywhere on the row ticks it) -->
-						<label>
-							<m3e-checkbox
-								aria-label={[line.amount, line.text].filter(Boolean).join(' ')}
-								checked={have || undefined}
-								onchange={(e: Event & { currentTarget: HTMLElement & { checked: boolean } }) =>
-									tick('have', i, e.currentTarget.checked)}
-							></m3e-checkbox>
-							<span class="amount">{line.amount}</span>
-							<span>{line.text}</span>
+					<li>
+						<label class="kh-row kh-check-row">
+							<span class="kh-row__leading">
+								<input
+									type="checkbox"
+									class="kh-check"
+									aria-label={[line.amount, line.text].filter(Boolean).join(' ')}
+									checked={ticks.have.includes(i)}
+									onchange={(e) => tick('have', i, e.currentTarget.checked)}
+								/>
+							</span>
+							<span class="kh-row__text">
+								<span class="kh-row__title"
+									><span class="amount">{line.amount}</span>{line.text}</span
+								>
+							</span>
 						</label>
 					</li>
 				{/each}
@@ -382,23 +385,16 @@
 
 	.lines {
 		margin: 0;
-		padding: 0 0 0.375rem;
+		padding: 0;
 		list-style: none;
-		font-size: 1.0625rem;
 	}
 
-	.lines label {
-		min-height: 3.25rem;
-		padding: 0 0.75rem 0 0.375rem;
+	/* Read at arm's length: the amount in a column of its own, and a long line shown whole. */
+	.lines .kh-row__title {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		cursor: pointer;
-	}
-
-	.have label {
-		color: var(--kh-on-surface-variant);
-		text-decoration: line-through;
+		gap: var(--kh-space-s);
+		font: var(--kh-type-body);
+		font-size: 1.0625rem;
 	}
 
 	.amount {

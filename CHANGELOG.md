@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.16.0
+
+- Kryssen för ingredienserna i Laga och reglaget Passar till matlådor i en rätt är Kodhästs kryssrad och reglage, som i Android-apparna (#174). En ikryssad ingrediens stryks över, som förut.
+
 ## 0.15.0
 
 - Ny rätt, Redigera rätt och Laga har Kodhästs topprad, fält, val, knappar och kort, som i Android-apparna (#174). Laga visar dagen, tiden och portionerna på en rad under rubriken. Reglaget för matlådor och kryssen i Laga byts när Kodhästs kryssrad och reglage finns.

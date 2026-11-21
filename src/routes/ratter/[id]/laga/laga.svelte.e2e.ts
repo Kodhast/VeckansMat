@@ -14,7 +14,8 @@ async function addDish(page: Page, name: string) {
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
 }
 
-const ingredient = (page: Page, text: string) => page.locator(`m3e-checkbox[aria-label="${text}"]`);
+const ingredient = (page: Page, text: string) =>
+	page.getByRole('checkbox', { name: text, exact: true });
 
 test('a dish is cooked from its page, with portions, ticks and a timer', async ({ page }) => {
 	await addDish(page, 'Kycklinggryta');
@@ -61,7 +62,13 @@ test('a dish is cooked from its page, with portions, ticks and a timer', async (
 	await reload(page);
 	await expect(page.getByText('2 portioner')).toBeVisible();
 	await expect(page.getByText('1 av 4 framme')).toBeVisible();
-	await expect(ingredient(page, '300 g kycklingfilé')).toHaveAttribute('checked');
+	await expect(ingredient(page, '300 g kycklingfilé')).toBeChecked();
+	// A ticked ingredient is struck through, as web-ui's check row is when done.
+	await expect(
+		page
+			.locator('.kh-check-row', { has: ingredient(page, '300 g kycklingfilé') })
+			.locator('.kh-row__title')
+	).toHaveCSS('text-decoration-line', 'line-through');
 	await expect(page.getByRole('button', { name: /Hacka löken/ })).toHaveAttribute(
 		'aria-pressed',
 		'true'
