@@ -19,7 +19,7 @@
 		gap: 0.75rem;
 		padding: 2rem 1rem;
 		text-align: center;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	p {

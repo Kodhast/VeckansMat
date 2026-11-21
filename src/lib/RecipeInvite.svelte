@@ -1,42 +1,41 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Icon from './Icon.svelte';
 
-	// For a dish with only a name: what there is of it, and the ways to get its recipe.
+	// For a dish with only a name: what there is of it, and the ways to get its recipe, on a card in
+	// the primary tone (web-ui's kh-card--tone).
 	let { recipeId, text }: { recipeId: number; text: string } = $props();
+	let id = $derived(String(recipeId));
 </script>
 
-<section class="banner invite">
+<section class="kh-card kh-card--tone">
 	<p>{text}</p>
 	<div class="actions">
-		<m3e-button variant="filled" href="/ratter/ny?till={recipeId}">
-			<span slot="icon" class="slot-icon"><Icon name="camera" /></span>Hämta receptet
-		</m3e-button>
-		<m3e-button variant="text" href="/ratter/{recipeId}/redigera">Skriv in själv</m3e-button>
+		<a class="kh-btn" href="{resolve('/ratter/ny')}?till={recipeId}">
+			<Icon name="camera" />Hämta receptet
+		</a>
+		<a class="kh-btn kh-btn--text" href={resolve('/ratter/[id]/redigera', { id })}>Skriv in själv</a
+		>
 	</div>
 </section>
 
 <style>
-	.invite {
-		padding: 1rem 1rem 0.875rem;
-		border-radius: 1.5rem;
-		font-size: 0.9375rem;
-		line-height: 1.3125rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
+	section {
+		color: var(--kh-on-primary-container);
 	}
 
 	p {
 		margin: 0;
+		font: var(--kh-type-body-medium);
 	}
 
 	.actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		gap: var(--kh-space-s);
 	}
 
-	m3e-button[variant='text'] {
-		--m3e-text-button-label-text-color: var(--md-sys-color-on-primary-container);
+	.kh-btn--text {
+		color: inherit;
 	}
 </style>

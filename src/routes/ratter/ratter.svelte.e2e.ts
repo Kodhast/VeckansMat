@@ -24,11 +24,11 @@ test('dishes are listed in a card per sort, by how often they were eaten', async
 	}).toPass();
 	await expect(card(page, 'Soppor')).toContainText('Linssoppa');
 	await expect(card(page, 'Fisk')).not.toContainText('Linssoppa');
-	const fish = card(page, 'Fisk').locator('m3e-list-action');
+	const fish = card(page, 'Fisk').getByRole('link');
 	await expect(fish.first()).toContainText('Fiskgratäng');
 	await expect(fish.first()).toContainText('2 gånger · senast v. 3 2030');
 
-	await page.getByRole('button', { name: 'A–Ö' }).click();
+	await page.getByRole('radio', { name: 'A–Ö' }).click();
 	await expect(fish.first()).toContainText('Abborre i ugn');
 
 	// A search shows only the sorts with a match.
@@ -62,11 +62,11 @@ test('a new dish is added with its name and one tap, and can be filled in', asyn
 	await expect(page.getByText('Ärtsoppa är tillagd')).toBeVisible();
 	await expect(search).toHaveValue('');
 
-	await page.locator('m3e-list-action', { hasText: 'Ärtsoppa' }).click();
+	await page.locator('a.kh-row', { hasText: 'Ärtsoppa' }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ärtsoppa');
 	await expect(page.getByText('Rätten har bara ett namn.')).toBeVisible();
 
-	await page.locator('m3e-button', { hasText: 'Skriv in själv' }).click();
+	await page.getByRole('link', { name: 'Skriv in själv' }).click();
 	await page.getByLabel('Portioner').fill('4');
 	await page.getByLabel('Ingredienser').fill('500 g köttfärs\n1 vitkål');
 	await page.locator('m3e-switch#lunchbox').click();
@@ -76,6 +76,31 @@ test('a new dish is added with its name and one tap, and can be filled in', asyn
 	await expect(page.getByText('4 portioner')).toBeVisible();
 	await expect(page.getByText('Passar till matlådor')).toBeVisible();
 	await expect(page.getByText('1 vitkål')).toBeVisible();
+});
+
+test('Öppna on the message opens the dish just added, and Rensa empties the search', async ({
+	page
+}) => {
+	await open(page, '/ratter');
+	const search = page.getByRole('searchbox', { name: 'Sök eller lägg till rätt' });
+	await search.fill('Kålpudding');
+	await page.getByRole('button', { name: 'Rensa' }).click();
+	await expect(search).toHaveValue('');
+	await expect(search).toBeFocused();
+
+	await search.fill('Kålpudding');
+	await page.getByRole('button', { name: 'Lägg till ”Kålpudding”' }).click();
+	await page.getByRole('button', { name: 'Öppna' }).click();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kålpudding');
+});
+
+test('the arrows move the order, as in a group of radio buttons', async ({ page }) => {
+	await open(page, '/ratter');
+	const often = page.getByRole('radio', { name: 'Oftast' });
+	await often.focus();
+	await page.keyboard.press('ArrowRight');
+	await expect(page.getByRole('radio', { name: 'A–Ö' })).toBeChecked();
+	await expect(page.getByRole('radio', { name: 'A–Ö' })).toBeFocused();
 });
 
 test('Claude sorts the dishes in the background, and a sort chosen by hand stays', async ({
@@ -96,11 +121,11 @@ test('Claude sorts the dishes in the background, and a sort chosen by hand stays
 	await expect(page.getByText('Viltgryta är tillagd')).toBeVisible();
 	await expect(async () => {
 		await open(page, '/ratter');
-		await page.locator('m3e-list-action', { hasText: 'Viltgryta' }).click();
+		await page.locator('a.kh-row', { hasText: 'Viltgryta' }).click();
 		await expect(page.getByText('Potatis', { exact: true })).toBeVisible({ timeout: 1000 });
 	}).toPass();
 
-	await page.locator('m3e-icon-button[aria-label="Redigera"]').click();
+	await page.getByRole('link', { name: 'Redigera' }).click();
 	await expect(page.getByText('Claude gissade sort och bas.')).toBeVisible();
 	await page.getByText('Kött', { exact: true }).click();
 	await page.getByText('Ris', { exact: true }).click();
@@ -118,8 +143,8 @@ test('the steps are numbered, the cards fold away, and Spara stays on top', asyn
 	await search.fill('Ugnspannkaka');
 	await page.getByRole('button', { name: 'Lägg till ”Ugnspannkaka”' }).click();
 	await expect(page.getByText('Ugnspannkaka är tillagd')).toBeVisible();
-	await page.locator('m3e-list-action', { hasText: 'Ugnspannkaka' }).click();
-	await page.locator('m3e-button', { hasText: 'Skriv in själv' }).click();
+	await page.locator('a.kh-row', { hasText: 'Ugnspannkaka' }).click();
+	await page.getByRole('link', { name: 'Skriv in själv' }).click();
 
 	await page.getByLabel('Ingredienser').fill('3 ägg\n6 dl mjölk');
 	await page.getByLabel('Gör så här').fill('Vispa ihop allt.\n\nGrädda i 225 grader.');
@@ -144,9 +169,9 @@ test('the weeks with a dish are folded away at first', async ({ page }) => {
 	await open(page, '/ratter/1');
 	const weeks = page.getByRole('button', { name: /Veckor med rätten/ });
 	await expect(weeks).toHaveAttribute('aria-expanded', 'false');
-	await expect(page.locator('m3e-list-action', { hasText: 'Vecka 3 2030' })).toBeHidden();
+	await expect(page.locator('a.kh-row', { hasText: 'Vecka 3 2030' })).toBeHidden();
 	await weeks.click();
-	await expect(page.locator('m3e-list-action', { hasText: 'Vecka 3 2030' })).toBeVisible();
+	await expect(page.locator('a.kh-row', { hasText: 'Vecka 3 2030' })).toBeVisible();
 });
 
 test('a dish cannot take the name of another', async ({ page }) => {
@@ -206,7 +231,7 @@ test('the last dish can be scrolled up above the menu and tapped', async ({ page
 	await page.setViewportSize({ width: 412, height: 360 });
 	await open(page, '/ratter');
 	await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-	const last = page.locator('m3e-list-action').last();
+	const last = page.locator('a.kh-row').last();
 	const dish = (await last.boundingBox())!;
 	const menu = (await page.getByRole('navigation', { name: 'Huvudmeny' }).boundingBox())!;
 	expect(dish.y + dish.height).toBeLessThan(menu.y);
@@ -225,7 +250,7 @@ test('the plus button on Rätter opens Ny rätt', async ({ page }) => {
 
 test('a favourite has a thumb up in Rätter and on its page', async ({ page }) => {
 	await open(page, '/ratter');
-	const row = (name: string) => page.locator('m3e-list-action', { hasText: name });
+	const row = (name: string) => page.locator('a.kh-row', { hasText: name });
 	await expect(row('Ostfrallor').getByRole('img', { name: 'Favorit' })).toBeVisible();
 	await expect(row('Fiskgratäng').getByRole('img', { name: 'Favorit' })).toHaveCount(0);
 

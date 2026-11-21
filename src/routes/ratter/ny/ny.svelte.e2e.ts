@@ -64,7 +64,7 @@ test('a dish with only a name is filled in from its own page and keeps its name'
 	await page.getByRole('button', { name: 'Spara' }).click();
 	await expect(page).toHaveURL('/ratter/3');
 
-	await page.locator('m3e-button', { hasText: 'Hämta receptet' }).click();
+	await page.getByRole('link', { name: 'Hämta receptet' }).click();
 	await read(page, `${SITE}/nekad`);
 	await expect(page.getByRole('alert')).toBeVisible();
 	await expect(

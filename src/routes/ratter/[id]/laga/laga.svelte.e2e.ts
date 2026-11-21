@@ -10,7 +10,7 @@ async function addDish(page: Page, name: string) {
 	await page.getByRole('searchbox', { name: 'Sök eller lägg till rätt' }).fill(name);
 	await page.getByRole('button', { name: `Lägg till ”${name}”` }).click();
 	await expect(page.getByText(`${name} är tillagd`)).toBeVisible();
-	await page.locator('m3e-list-action', { hasText: name }).click();
+	await page.locator('a.kh-row', { hasText: name }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(name);
 }
 
@@ -18,7 +18,7 @@ const ingredient = (page: Page, text: string) => page.locator(`m3e-checkbox[aria
 
 test('a dish is cooked from its page, with portions, ticks and a timer', async ({ page }) => {
 	await addDish(page, 'Kycklinggryta');
-	await page.locator('m3e-button', { hasText: 'Skriv in själv' }).click();
+	await page.getByRole('link', { name: 'Skriv in själv' }).click();
 	await page.getByLabel('Portioner').fill('4');
 	await page
 		.getByLabel('Ingredienser')
@@ -28,7 +28,7 @@ test('a dish is cooked from its page, with portions, ticks and a timer', async (
 		.fill('Hacka löken och bryn kycklingen.\n\nHäll på grädden och låt koka i 20 minuter.');
 	await page.getByRole('button', { name: 'Spara' }).click();
 
-	await page.locator('m3e-button', { hasText: 'Laga maten' }).click();
+	await page.getByRole('link', { name: 'Laga maten' }).click();
 	await expect(page).toHaveURL(/\/ratter\/\d+\/laga$/);
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kycklinggryta');
 	// Nobody is chosen for the made-up weeks, so two eat, as on the shopping list, and the recipe
@@ -92,10 +92,10 @@ test('a dish with just a name shows how to get the recipe, and the guessed ingre
 }) => {
 	// Made up in test/e2e-seed.sql.
 	await open(page, '/ratter/4');
-	await page.locator('m3e-button', { hasText: 'Laga maten' }).click();
+	await page.getByRole('link', { name: 'Laga maten' }).click();
 	await expect(page.getByText('bara ingredienserna Claude gissade')).toBeVisible();
-	await expect(page.locator('m3e-button', { hasText: 'Hämta receptet' })).toBeVisible();
-	await expect(page.locator('m3e-button', { hasText: 'Skriv in själv' })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Hämta receptet' })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Skriv in själv' })).toBeVisible();
 	await expect(page.getByText('Gissade · 0 av 2 framme')).toBeVisible();
 	await ingredient(page, '1 ½ gula lökar').click();
 	await expect(page.getByText('Gissade · 1 av 2 framme')).toBeVisible();
