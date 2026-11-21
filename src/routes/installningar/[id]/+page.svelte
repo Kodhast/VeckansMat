@@ -60,7 +60,12 @@
 		<button
 			type="button"
 			class="kh-btn kh-btn--destructive-text"
-			onclick={() => question?.showModal()}>Radera {data.person.name}</button
+			onclick={() => {
+				// Escape leaves the last answer, so a new question starts without one.
+				if (!question) return;
+				question.returnValue = '';
+				question.showModal();
+			}}>Radera {data.person.name}</button
 		>
 	</form>
 
