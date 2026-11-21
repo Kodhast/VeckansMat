@@ -37,7 +37,7 @@
 		</filter>
 	</svg>
 	<div class="head">
-		<h1 class="ink">Veckans meny</h1>
+		<h2 class="ink">Veckans meny</h2>
 		<p class="dates ink">{dates}</p>
 		<div class="ornament" aria-hidden="true"><span></span><span></span><span></span></div>
 		{@render eaters()}
@@ -119,12 +119,17 @@
 		text-align: center;
 	}
 
-	h1 {
+	/* The view's title is in the header, so the paper's heading is the first under it. It has no dots. */
+	h2 {
 		margin: 0;
 		font-family: var(--menu-hand);
 		font-weight: 700;
 		font-size: 2.875rem;
 		line-height: 1.05;
+	}
+
+	h2::before {
+		content: none;
 	}
 
 	.dates {

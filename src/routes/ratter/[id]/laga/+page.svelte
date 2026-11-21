@@ -171,7 +171,7 @@
 	<title>Laga {recipe.name} – Veckans mat</title>
 </svelte:head>
 
-<header class="warm-view">
+<header>
 	<m3e-icon-button href={data.back ?? `/ratter/${recipe.id}`} aria-label="Tillbaka">
 		<Icon name="back" />
 	</m3e-icon-button>

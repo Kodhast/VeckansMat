@@ -1,0 +1,116 @@
+/*
+ * Veckans mat's theme for web-ui (decision 0026), as AppTheme in the Android apps.
+ *
+ * Only what the app sets is here: the colours, the typefaces, the text sizes and the colours of the
+ * depth (web-ui's README, "Appen sätter"). The shapes, the measures and the parts come from
+ * @kodhast/web-ui and are never written over here.
+ *
+ * One fixed colour, Saffran (#174): no other Kodhäst app is yellow. White cards on a warm background as
+ * before (#21, #73). Roboto as on Android; the handwriting only on Veckan's paper (decision 0019).
+ */
+
+:root {
+	--kh-font-body: Roboto, system-ui, sans-serif;
+	--kh-font-heading: Roboto, system-ui, sans-serif;
+	--kh-type-screen-title: 800 2.125rem/2.5rem var(--kh-font-heading);
+	--kh-type-big-number: 800 1.75rem/2rem var(--kh-font-heading);
+	--kh-type-headline: 800 1.375rem/1.75rem var(--kh-font-heading);
+	--kh-type-section-title: 700 1.125rem/1.5rem var(--kh-font-heading);
+	--kh-type-quantity: 700 1.375rem/1.75rem var(--kh-font-heading);
+	--kh-type-item-title: 600 1rem/1.375rem var(--kh-font-body);
+	--kh-type-item-subtitle: 400 0.875rem/1.25rem var(--kh-font-body);
+	--kh-type-body: 400 1rem/1.5rem var(--kh-font-body);
+	--kh-type-body-medium: 400 0.875rem/1.25rem var(--kh-font-body);
+	--kh-type-pill: 600 0.8125rem/1rem var(--kh-font-body);
+	--kh-type-caption: 700 0.75rem/1rem var(--kh-font-body);
+	--kh-type-button: 600 0.9375rem/1.25rem var(--kh-font-heading);
+	--kh-tracking-screen-title: -0.02em;
+	--kh-tracking-caption: 0.08em;
+}
+
+:root {
+	color-scheme: light;
+	--kh-primary: #7a5900;
+	--kh-on-primary: #ffffff;
+	--kh-primary-container: #ffdf9e;
+	--kh-on-primary-container: #5c4300;
+	--kh-secondary: #7a5900;
+	--kh-on-secondary: #ffffff;
+	--kh-secondary-container: #f3e5c4;
+	--kh-on-secondary-container: #4a3c1c;
+	--kh-tertiary: #6b5e2f;
+	--kh-on-tertiary: #ffffff;
+	--kh-background: #f6f1e8;
+	--kh-on-background: #1c1c1b;
+	--kh-on-surface: #1c1c1b;
+	--kh-surface-variant: #e9e9e6;
+	--kh-on-surface-variant: #4a4946;
+	--kh-outline: #7a7975;
+	--kh-outline-variant: #d9d8d4;
+	--kh-error: #ba1a1a;
+	--kh-on-error: #ffffff;
+	--kh-error-container: #ffdad6;
+	--kh-on-error-container: #93000a;
+	--kh-inverse-surface: #31302f;
+	--kh-inverse-on-surface: #f3f0ee;
+	--kh-inverse-primary: #f5bf48;
+	--kh-scrim: #000000;
+	--kh-card: #ffffff;
+	--kh-row-tint: #faf5ec;
+	--kh-toolbar: #2d2a24;
+	--kh-on-toolbar: #f3ede3;
+	--kh-surface-container-high: #ffffff;
+
+	--kh-depth-highlight: rgb(255 255 255 / 0.3);
+	--kh-depth-sheen: rgb(255 255 255 / 0.12);
+	--kh-depth-shadow: rgb(92 67 0 / 0.32);
+	--kh-depth-card-edge: rgb(92 67 0 / 0.07);
+	--kh-depth-card-shadow: rgb(92 67 0 / 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		color-scheme: dark;
+		--kh-primary: #f5bf48;
+		--kh-on-primary: #402d00;
+		--kh-primary-container: #5c4300;
+		--kh-on-primary-container: #ffdf9e;
+		--kh-secondary: #f5bf48;
+		--kh-on-secondary: #402d00;
+		--kh-secondary-container: #4a3c1c;
+		--kh-on-secondary-container: #ffdf9e;
+		--kh-tertiary: #d7c68d;
+		--kh-on-tertiary: #3a3005;
+		--kh-background: #131313;
+		--kh-on-background: #e5e4e2;
+		--kh-on-surface: #e5e4e2;
+		--kh-surface-variant: #353534;
+		--kh-on-surface-variant: #c9c7c3;
+		--kh-outline: #93918d;
+		--kh-outline-variant: #484745;
+		--kh-error: #ffb4ab;
+		--kh-on-error: #690005;
+		--kh-error-container: #93000a;
+		--kh-on-error-container: #ffdad6;
+		--kh-inverse-surface: #e5e4e2;
+		--kh-inverse-on-surface: #31302f;
+		--kh-inverse-primary: #7a5900;
+		--kh-card: #201f1f;
+		--kh-row-tint: #2a2a29;
+		--kh-foldout-surface: var(--kh-surface-variant);
+		--kh-toolbar: #353534;
+		--kh-on-toolbar: #e5e4e2;
+		--kh-surface-container-high: #2a2a29;
+
+		--kh-depth-highlight: rgb(255 255 255 / 0.12);
+		--kh-depth-sheen: rgb(255 255 255 / 0.06);
+		--kh-depth-shadow: rgb(0 0 0 / 0.5);
+		--kh-depth-card-edge: rgb(255 255 255 / 0.06);
+		--kh-depth-card-shadow: rgb(0 0 0 / 0.4);
+	}
+}
+
+/* web-ui fills the icons in its buttons; the app's icons are lines (Icon.svelte). */
+:is(.kh-toolbar__tab, .kh-toolbar__action, .kh-menu__item, .kh-avatar__circle, .kh-icon-btn) > svg {
+	fill: none;
+}

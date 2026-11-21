@@ -51,7 +51,8 @@ gränssnitt, `docs/`, commit-meddelanden, issues och PR:er.
 
 - En sak per PR. Tester skrivs i samma PR som koden. Ändras appen höjs versionen
   och `CHANGELOG.md` får en rad (`/release`). Skarp drift bara vid release.
-- Komponenter från `@m3e/web`, registrerade i `src/lib/m3e.ts`.
+- Utseendet från `@kodhast/web-ui` och temat i `src/lib/tema.css` (beslut 0026). Vyer som inte
+  flyttat än har kvar `@m3e/web`, registrerade i `src/lib/m3e.ts`.
 - `/refine-issue` planerar, `/implement-issue` genomför, `/mockup` före ny GUI.
   Före push: `/simplify`, agenten `granskare`, `/code-review`. Allt: `.claude/README.md`.
 - Lärdomar om hur Claude styrs i projektet skrivs i `docs/ai-styrning.md`.

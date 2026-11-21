@@ -3,6 +3,11 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.11.0
+
+- Första steget mot samma utseende som Kodhästs Android-appar (#174): ett nytt sidhuvud med appens ikon, namn och version, som krymper när man rullar; kontot är en meny under bilden med Inställningar, Om appen och Logga ut; flikarna och plusknappen sitter i en gemensam rad längst ned. Ny vy Om appen med versionen, ändringslistan och Kodhästs signatur, som ersätter sidfoten.
+- Appen har en fast färg, Saffran, även i ikonen. Färgvalet i Inställningar är borta.
+
 ## 0.10.0
 
 - Appen bär Kodhästs signatur, samma som de andra apparna: hästen och "En kodhäst-app" i sidfoten, hästen i de tomma listorna, två prickar framför avsnittsrubrikerna och två prickar i appikonen. Allt i appens egna färger. (#162)

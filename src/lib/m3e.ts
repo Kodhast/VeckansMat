@@ -8,7 +8,6 @@ import '@m3e/web/search';
 import '@m3e/web/button';
 import '@m3e/web/button-group';
 import '@m3e/web/icon-button';
-import '@m3e/web/fab';
 import '@m3e/web/loading-indicator';
 import '@m3e/web/form-field';
 import '@m3e/web/textarea-autosize';

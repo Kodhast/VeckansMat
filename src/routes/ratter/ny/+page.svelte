@@ -92,7 +92,7 @@
 </svelte:head>
 
 {#if review}
-	<form method="POST" action="?/save{till}" class="form-page warm-view" use:enhance>
+	<form method="POST" action="?/save{till}" class="form-page" use:enhance>
 		<FormHeader title="Ny rätt" back={restart} backLabel="Börja om" />
 
 		{#if review.existing}
@@ -128,7 +128,7 @@
 		method="POST"
 		action="?/read{till}"
 		enctype="multipart/form-data"
-		class="form-page warm-view"
+		class="form-page"
 		use:enhance={read}
 		bind:this={readForm}
 	>

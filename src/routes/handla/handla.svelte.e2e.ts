@@ -57,7 +57,7 @@ test('the week shopping list is made from the dishes and ticked off in the store
 	await expect(page.getByRole('checkbox', { name: 'Salt' })).not.toBeChecked();
 
 	// Items written by hand, two in a row from the add button, stay when the list is made again.
-	await page.locator('m3e-fab[aria-label="Lägg till en vara"]').click();
+	await page.getByRole('button', { name: 'Lägg till en vara', exact: true }).click();
 	const field = page.getByRole('textbox', { name: 'Lägg till en vara' });
 	await field.fill('Kaffe');
 	await page.keyboard.press('Enter');

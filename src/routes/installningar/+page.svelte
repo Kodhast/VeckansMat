@@ -6,7 +6,6 @@
 	import Initial from '#lib/Initial.svelte';
 	import OffersSheet from '#lib/OffersSheet.svelte';
 	import StorePicker from '#lib/StorePicker.svelte';
-	import ThemePicker from '#lib/ThemePicker.svelte';
 	import { postAction } from '#lib/actions.ts';
 	import { LUNCHBOX_EXTRA_CHOICES, MAX_NEW_DISHES, MAX_REPEAT_WEEKS } from '#lib/household.ts';
 	import {
@@ -372,9 +371,6 @@
 			<span slot="icon" class="slot-icon"><Icon name="tag" /></span>Visa veckans erbjudanden
 		</m3e-button>
 	{/if}
-
-	<h2>Färg</h2>
-	<ThemePicker />
 </main>
 
 <OffersSheet open={showingOffers} onclose={() => (showingOffers = false)} />

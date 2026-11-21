@@ -6,7 +6,7 @@ med `/adr` i Claude Code.
 | Nr                                                 | Beslut                                          | Status                                            |
 | -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
 | [0001](0001-beslut-som-adr.md)                     | Beslut skrivs som ADR                           | Beslutat                                          |
-| [0002](0002-sveltekit-typescript-m3e.md)           | SvelteKit, TypeScript och Material 3 Expressive | Beslutat                                          |
+| [0002](0002-sveltekit-typescript-m3e.md)           | SvelteKit, TypeScript och Material 3 Expressive | Beslutat, komponenterna ersatta av 0026           |
 | [0003](0003-cloudflare-drift.md)                   | Drift på Cloudflare                             | Beslutat, förhandsadressen ersatt av 0012         |
 | [0004](0004-publikt-repo.md)                       | Publikt repo                                    | Beslutat                                          |
 | [0005](0005-cloudflare-access.md)                  | Åtkomst via Cloudflare Access                   | Beslutat, inloggningssättet ersatt av 0021        |
@@ -30,3 +30,4 @@ med `/adr` i Claude Code.
 | [0023](0023-erbjudanden.md)                        | Erbjudanden från butiker                        | Beslutat                                          |
 | [0024](0024-plan-bara-for-storre-andringar.md)     | Plan bara för större ändringar                  | Beslutat                                          |
 | [0025](0025-arbetsflodets-stomme-fran-pluginen.md) | Arbetsflödets stomme från pluginen              | Beslutat                                          |
+| [0026](0026-web-ui-i-stallet-for-m3e.md)           | web-ui i stället för m3e                        | Beslutat                                          |

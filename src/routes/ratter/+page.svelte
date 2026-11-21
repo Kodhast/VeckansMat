@@ -2,12 +2,12 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import AccountButton from '#lib/AccountButton.svelte';
+	import AppHeader from '#lib/AppHeader.svelte';
 	import EmptyNote from '#lib/EmptyNote.svelte';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
 	import SubmitButton from '#lib/SubmitButton.svelte';
-	import { useFab } from '#lib/fab.svelte.ts';
+	import { useToolbarAction } from '#lib/toolbar.svelte.ts';
 	import { recipeUrl } from '#lib/links.ts';
 	import { nameKey } from '#lib/names.ts';
 	import { byName, byOften, CATEGORIES, categoryLook, matching } from '#lib/recipes.ts';
@@ -18,7 +18,7 @@
 
 	let { data, form }: PageProps = $props();
 
-	useFab(newDish);
+	useToolbarAction({ label: 'Ny rätt', href: '/ratter/ny' });
 
 	let query = $state('');
 	const orders = [
@@ -106,13 +106,9 @@
 	<title>Rätter – Veckans mat</title>
 </svelte:head>
 
-<main class="warm-view">
-	<div class="view-top">
-		<p class="view-label">{recipes.length} rätter</p>
-		<AccountButton />
-	</div>
-	<h1 class="view-title">Rätter</h1>
+<AppHeader title="Rätter" subtitle="{recipes.length} rätter" />
 
+<main>
 	<form method="POST" action="?/add" use:enhance={add}>
 		<m3e-search-bar clearable clear-label="Rensa">
 			<span slot="leading" class="slot-icon"><Icon name="search" /></span>
@@ -189,10 +185,6 @@
 	{/if}
 </main>
 
-{#snippet newDish()}
-	<m3e-fab variant="primary" href="/ratter/ny" aria-label="Ny rätt"><Icon name="add" /></m3e-fab>
-{/snippet}
-
 {#key form?.added}
 	{#if form?.added}
 		<m3e-snackbar action="Öppna" duration="6000" open ontoggle={openAdded}>
@@ -209,10 +201,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.875rem;
-	}
-
-	h1 {
-		margin-left: 0.25rem;
 	}
 
 	h2 {

@@ -75,3 +75,12 @@ export async function hold(page: Page, locator: Locator, ms = 700) {
 	await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 	await touch.detach();
 }
+
+/** The account button in the header, which opens the account menu (#174). */
+export const accountButton = (page: Page) => page.getByRole('button', { name: /^Konto/ });
+
+/** Goes to a page in the account menu, as Inställningar or Om appen. */
+export async function fromAccountMenu(page: Page, item: 'Inställningar' | 'Om appen') {
+	await accountButton(page).click();
+	await page.getByRole('menuitem', { name: item }).click();
+}

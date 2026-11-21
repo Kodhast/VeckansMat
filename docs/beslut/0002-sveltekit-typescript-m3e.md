@@ -1,6 +1,6 @@
 # 0002. SvelteKit, TypeScript och Material 3 Expressive
 
-- **Status:** Beslutat
+- **Status:** Beslutat, komponenterna ersatta av 0026
 - **Datum:** 2026-10-23
 
 ## Sammanhang
