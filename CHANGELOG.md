@@ -5,7 +5,7 @@ Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ä
 
 ## 0.17.0
 
-- Handla har Kodhästs kryssrad, svep, knappar, kort och meddelanden, som i Android-apparna (#174): en vara kryssas med den runda kryssrutan, sveps åt vänster för att tas bort och kommer tillbaka med Ångra. Raden för en ny vara och butiksväljaren i Inställningar har Kodhästs fält och ark.
+- Handla har Kodhästs kryssrad, svep, knappar, kort och meddelanden, som i Android-apparna (#174): en vara kryssas med den runda kryssrutan, sveps åt vänster för att tas bort (en tredjedel av raden, eller ett snabbt drag, räcker nu) och kommer tillbaka med Ångra. Raden för en ny vara och butiksväljaren i Inställningar har Kodhästs fält och ark.
 
 ## 0.16.0
 

@@ -105,7 +105,13 @@ test('chains and a store are chosen for the offers, and fetched at once', async 
 	const ica = page.getByRole('region', { name: 'ICA' });
 	await ica.getByRole('switch', { name: 'ICA' }).click();
 	await expect(page.getByText('Välj ICA-butik')).toBeVisible();
-	await expect(page.getByRole('searchbox', { name: 'Sök på ort eller butik' })).toBeInViewport();
+	const storeSearch = page.getByRole('searchbox', { name: 'Sök på ort eller butik' });
+	await expect(storeSearch).toBeInViewport();
+	// Rensa empties the search and leaves the finger in it.
+	await storeSearch.fill('fel ort');
+	await page.getByRole('button', { name: 'Rensa' }).click();
+	await expect(storeSearch).toHaveValue('');
+	await expect(storeSearch).toBeFocused();
 	await page.getByRole('searchbox', { name: 'Sök på ort eller butik' }).fill('exempelby');
 	await page.getByRole('searchbox', { name: 'Sök på ort eller butik' }).press('Enter');
 	await page.getByRole('button', { name: /ICA Supermarket Exempelby/ }).click();

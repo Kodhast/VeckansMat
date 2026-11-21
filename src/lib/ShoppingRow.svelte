@@ -27,10 +27,11 @@
 	// page's (#105), which kh-swipe marks with data-own-swipe itself.
 	let swipe: HTMLElement | undefined = $state();
 	$effect(() => {
-		if (!swipe) return;
+		const element = swipe;
+		if (!element) return;
 		const removed = () => onremove();
-		swipe.addEventListener('kh-swipe', removed);
-		return () => swipe?.removeEventListener('kh-swipe', removed);
+		element.addEventListener('kh-swipe', removed);
+		return () => element.removeEventListener('kh-swipe', removed);
 	});
 
 	// The popup with the dishes opens under its button, in the top layer.
