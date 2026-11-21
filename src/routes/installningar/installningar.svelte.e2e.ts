@@ -1,16 +1,22 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { fromAccountMenu, open, reload, saved } from '../../../test/e2e';
 
 // Made-up people only. The tests share one database, so they run in order.
 test.describe.configure({ mode: 'serial' });
 
+/** The number a stepper shows, found by the name of its buttons. */
+const stepperValue = (page: Page, label: string) =>
+	page
+		.locator('kh-stepper', { has: page.getByRole('button', { name: `Öka ${label}` }) })
+		.locator('output');
+
 test('a person is added with what they do not eat, changed and removed', async ({ page }) => {
 	await open(page, '/');
 	await fromAccountMenu(page, 'Inställningar');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inställningar');
-	await expect(page.locator('m3e-list-action', { hasText: 'Kim' })).toHaveCount(0);
+	await expect(page.locator('a.kh-row', { hasText: 'Kim' })).toHaveCount(0);
 
-	await page.locator('m3e-button', { hasText: 'Lägg till person' }).click();
+	await page.getByRole('link', { name: 'Lägg till person' }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ny person');
 	// Only spaces passes the browser's check of the required field, and not the server's.
 	await page.getByLabel('Namn').fill('  ');
@@ -20,18 +26,25 @@ test('a person is added with what they do not eat, changed and removed', async (
 	await page.getByLabel('Namn').fill('Kim');
 	await page.getByLabel('Krav').fill('Äter inte fisk\nTål inte nötter');
 	await page.getByRole('button', { name: 'Spara' }).click();
-	const kim = page.locator('m3e-list-action', { hasText: 'Kim' });
+	const kim = page.locator('a.kh-row', { hasText: 'Kim' });
 	await expect(kim).toContainText('Äter inte fisk');
 
 	await kim.click();
 	await page.getByLabel('Namn').fill('Kim Test');
 	await page.getByRole('button', { name: 'Spara' }).click();
-	await expect(page.locator('m3e-list-action', { hasText: 'Kim Test' })).toBeVisible();
+	await expect(page.locator('a.kh-row', { hasText: 'Kim Test' })).toBeVisible();
 
-	await page.locator('m3e-list-action', { hasText: 'Kim Test' }).click();
-	await page.getByRole('button', { name: 'Ta bort Kim Test' }).click();
+	await page.locator('a.kh-row', { hasText: 'Kim Test' }).click();
+	// A person is removed for good, so a dialog asks first; Avbryt leaves them.
+	await page.getByRole('button', { name: 'Radera Kim Test' }).click();
+	const question = page.getByRole('dialog', { name: 'Radera Kim Test?' });
+	await question.getByRole('button', { name: 'Avbryt' }).click();
+	await expect(question).toBeHidden();
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kim Test');
+	await page.getByRole('button', { name: 'Radera Kim Test' }).click();
+	await question.getByRole('button', { name: 'Radera', exact: true }).click();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inställningar');
-	await expect(page.locator('m3e-list-action', { hasText: 'Kim Test' })).toHaveCount(0);
+	await expect(page.locator('a.kh-row', { hasText: 'Kim Test' })).toHaveCount(0);
 });
 
 test('the rules for every week are saved as they are changed', async ({ page }) => {
@@ -44,7 +57,7 @@ test('the rules for every week are saved as they are changed', async ({ page }) 
 	await rules.blur();
 	await saved;
 	saved = saving();
-	await page.getByRole('button', { name: 'Fler nya rätter' }).click();
+	await page.getByRole('button', { name: 'Öka nya rätter per vecka' }).click();
 	await saved;
 	saved = saving();
 	await page.getByRole('button', { name: '1 extra portion', exact: true }).click();
@@ -52,35 +65,34 @@ test('the rules for every week are saved as they are changed', async ({ page }) 
 
 	await reload(page);
 	await expect(rules).toHaveValue('Fisk en gång i veckan.\nVegetariskt på måndagar.');
-	await expect(page.getByRole('status', { name: 'Nya rätter per vecka' })).toHaveText('2');
-	// m3e drops aria-pressed from a button that is not a toggle, so the variant shows the choice.
+	await expect(stepperValue(page, 'nya rätter per vecka')).toHaveText('2');
 	await expect(page.getByRole('button', { name: '1 extra portion', exact: true })).toHaveAttribute(
-		'variant',
-		'filled'
+		'aria-pressed',
+		'true'
 	);
 });
 
 test('how often the same dish may come is saved as it is changed', async ({ page }) => {
 	await open(page, '/installningar');
-	const ordinary = page.getByRole('status', { name: /^Vanliga rätter/ });
-	const favourites = page.getByRole('status', { name: /^Favoriter/ });
+	const ordinary = stepperValue(page, 'veckor för vanliga rätter');
+	const favourites = stepperValue(page, 'veckor för favoriter');
 	await expect(ordinary).toHaveText('4');
 	await expect(favourites).toHaveText('2');
 
 	const saving = () => page.waitForResponse((r) => r.url().includes('/settings'));
 	let saved = saving();
-	await page.getByRole('button', { name: 'Fler veckor för favoriter' }).click();
+	await page.getByRole('button', { name: 'Öka veckor för favoriter' }).click();
 	await saved;
 	await expect(favourites).toHaveText('3');
 	// A favourite never waits longer than other dishes.
 	saved = saving();
-	await page.getByRole('button', { name: 'Fler veckor för favoriter' }).click();
+	await page.getByRole('button', { name: 'Öka veckor för favoriter' }).click();
 	await saved;
-	await expect(page.getByRole('button', { name: 'Fler veckor för favoriter' })).toHaveAttribute(
+	await expect(page.getByRole('button', { name: 'Öka veckor för favoriter' })).toHaveAttribute(
 		'disabled'
 	);
 	saved = saving();
-	await page.getByRole('button', { name: 'Färre veckor för vanliga rätter' }).click();
+	await page.getByRole('button', { name: 'Minska veckor för vanliga rätter' }).click();
 	await saved;
 	await expect(ordinary).toHaveText('3');
 	await expect(favourites).toHaveText('3');
@@ -134,10 +146,8 @@ test('chains and a store are chosen for the offers, and fetched at once', async 
 	await page.getByRole('switch', { name: 'Räkna med medlemspriser' }).click();
 
 	await open(page, '/installningar');
-	await expect(ica.getByRole('switch', { name: 'ICA' })).toHaveAttribute('checked');
+	await expect(ica.getByRole('switch', { name: 'ICA' })).toBeChecked();
 	await expect(ica.getByRole('button', { name: 'Byt butik' })).toBeVisible();
-	await expect(lidl.getByRole('switch', { name: 'Lidl' })).not.toHaveAttribute('checked');
-	await expect(page.getByRole('switch', { name: 'Räkna med medlemspriser' })).not.toHaveAttribute(
-		'checked'
-	);
+	await expect(lidl.getByRole('switch', { name: 'Lidl' })).not.toBeChecked();
+	await expect(page.getByRole('switch', { name: 'Räkna med medlemspriser' })).not.toBeChecked();
 });

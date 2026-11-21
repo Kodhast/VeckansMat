@@ -3,12 +3,9 @@
 	let { name, index }: { name: string; index: number } = $props();
 
 	const SHAPES = ['round', 'square', 'leaf'];
-	// It goes in the row's leading slot. Svelte takes slot="" only on an element written inside a
-	// custom element, so it is passed as a plain attribute.
-	const slot = { slot: 'leading' };
 </script>
 
-<span {...slot} class="initial {SHAPES[index % SHAPES.length]}" aria-hidden="true">{name[0]}</span>
+<span class="initial {SHAPES[index % SHAPES.length]}" aria-hidden="true">{name[0]}</span>
 
 <style>
 	.initial {
@@ -22,19 +19,19 @@
 
 	.round {
 		border-radius: 50%;
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
+		background: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
 	}
 
 	.square {
 		border-radius: 0.875rem;
-		background: var(--md-sys-color-secondary-container);
-		color: var(--md-sys-color-on-secondary-container);
+		background: var(--kh-secondary-container);
+		color: var(--kh-on-secondary-container);
 	}
 
 	.leaf {
 		border-radius: 50% 50% 50% 0.75rem;
-		background: var(--md-sys-color-tertiary-container);
-		color: var(--md-sys-color-on-tertiary-container);
+		background: var(--kh-surface-variant);
+		color: var(--kh-on-surface);
 	}
 </style>
