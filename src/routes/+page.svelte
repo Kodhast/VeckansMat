@@ -390,7 +390,7 @@
 	{/snippet}
 </WeekHeader>
 
-<main class="page warm-view">
+<main class="page">
 	{#if !hasSuggestion && !suggesting}
 		<section class="card">
 			<m3e-form-field variant="filled">

@@ -66,7 +66,7 @@
 	<title>{recipe.name} – Veckans mat</title>
 </svelte:head>
 
-<header class="warm-view">
+<header>
 	<m3e-icon-button href="/ratter" aria-label="Tillbaka till rätter">
 		<Icon name="back" />
 	</m3e-icon-button>

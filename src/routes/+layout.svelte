@@ -196,7 +196,6 @@
 		--md-sys-color-outline: var(--kh-outline);
 		--md-sys-color-outline-variant: var(--kh-outline-variant);
 		/* Fields in a card have a warm fill. */
-		--app-warm: var(--kh-background);
 		--app-fill: color-mix(in srgb, var(--kh-primary) 4%, #f9f8f7);
 		--app-card: var(--kh-card);
 		--app-card-shadow: 0 1px 2px rgb(60 30 15 / 0.06);

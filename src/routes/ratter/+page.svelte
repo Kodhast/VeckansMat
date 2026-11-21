@@ -108,7 +108,7 @@
 
 <AppHeader title="Rätter" subtitle="{recipes.length} rätter" />
 
-<main class="warm-view">
+<main>
 	<form method="POST" action="?/add" use:enhance={add}>
 		<m3e-search-bar clearable clear-label="Rensa">
 			<span slot="leading" class="slot-icon"><Icon name="search" /></span>

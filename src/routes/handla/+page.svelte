@@ -208,7 +208,7 @@
 	{/snippet}
 </WeekHeader>
 
-<main class="page warm-view">
+<main class="page">
 	{#if toBuy.length || basket.length}
 		<div class="progress">
 			<svg
