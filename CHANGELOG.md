@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.12.0
+
+- Varje rätt på veckans meny har en gryta längst till höger som öppnar Laga för den dagen. Att hålla kvar fingret på rätten, och tipset om det, är borttaget. (#174)
+
 ## 0.11.0
 
 - Första steget mot samma utseende som Kodhästs Android-appar (#174): ett nytt sidhuvud med appens ikon, namn och version, som krymper när man rullar; kontot är en meny under bilden med Inställningar, Om appen och Logga ut; flikarna och plusknappen sitter i en gemensam rad längst ned. Ny vy Om appen med versionen, ändringslistan och Kodhästs signatur, som ersätter sidfoten.

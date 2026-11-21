@@ -3,12 +3,11 @@
 	import VoteButton from './VoteButton.svelte';
 	import { offerText, type ChosenOffer } from './offers.ts';
 	import { isDish, MEAL_LABELS, type Vote } from './recipes.ts';
-	import { heading } from './swipe.ts';
 
 	// A dinner or a lunch on the menu, which opens for writing when tapped. Claude's dishes have a
 	// button that swaps them, and a new dish on a day that has passed one to vote on it instead.
 	// A dish chosen for an offer shows its price tag instead of why, which opens the offers.
-	// A finger held on a dish opens it for cooking (#137).
+	// A dish that can be cooked has a pot at the end of its line, which opens it in Laga (#174).
 	let {
 		name,
 		lunch = false,
@@ -24,7 +23,7 @@
 		onoffer,
 		onswap,
 		onvote,
-		oncook
+		cookHref
 	}: {
 		/** The meal and the day, as "Middag måndag". */
 		name: string;
@@ -47,64 +46,14 @@
 		/** The offer the dish was chosen for. */
 		offer?: ChosenOffer | null;
 		onoffer?: () => void;
-		/** Given when the line is a dish that can be cooked. */
-		oncook?: () => void;
+		/** Laga for the dish and day, given when the line is a dish that can be cooked. */
+		cookHref?: string;
 	} = $props();
-
-	/** How long a finger is held on a dish before it opens for cooking, in milliseconds. */
-	const HOLD = 500;
-	// Where the finger came down, while it is held.
-	let from = $state<{ x: number; y: number } | null>(null);
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	// A hold ends with a click on the line, which must not open it for writing.
-	let held = false;
-
-	function down(event: PointerEvent) {
-		const cook = oncook;
-		if (!cook || event.button !== 0) return;
-		held = false;
-		from = { x: event.clientX, y: event.clientY };
-		timer = setTimeout(() => {
-			held = true;
-			release();
-			navigator.vibrate?.(20);
-			cook();
-		}, HOLD);
-	}
-
-	function release() {
-		clearTimeout(timer);
-		from = null;
-	}
-
-	// A line that goes while the finger is held cooks nothing.
-	$effect(() => () => clearTimeout(timer));
-
-	// A finger that moves scrolls or swipes instead.
-	function move(event: PointerEvent) {
-		if (from && heading(event.clientX - from.x, event.clientY - from.y)) release();
-	}
-
-	function click() {
-		if (held) held = false;
-		else onedit();
-	}
 </script>
 
-<div class={['menu-line', lunch && 'lunch', swapped && 'swapped', from && 'holding']}>
+<div class={['menu-line', lunch && 'lunch', swapped && 'swapped']}>
 	<div class="main">
-		<button
-			type="button"
-			class="show"
-			aria-label="{name}: {text || 'tom'}"
-			onclick={click}
-			onpointerdown={down}
-			onpointermove={move}
-			onpointerup={release}
-			onpointercancel={release}
-			onpointerleave={release}
-			oncontextmenu={(e) => oncook && e.preventDefault()}
-		>
+		<button type="button" class="show" aria-label="{name}: {text || 'tom'}" onclick={onedit}>
 			{#if lunch}<span class="label">{MEAL_LABELS.lunch}</span>{/if}
 			<span class="text">
 				<span class={['dish ink', !text && 'empty', text && !isDish(text) && 'other']}
@@ -139,6 +88,10 @@
 			<Icon name="swap" />
 		</m3e-icon-button>
 	{/if}
+	{#if cookHref}
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved by Veckan, with the week and day after it -->
+		<a class="kh-icon-btn cook" href={cookHref} aria-label="Laga {text}"><Icon name="cook" /></a>
+	{/if}
 </div>
 
 <style>
@@ -155,12 +108,6 @@
 
 	.swapped {
 		background: var(--md-sys-color-primary-container);
-	}
-
-	/* Marked while the finger is held, after a moment so that a tap does not flash. */
-	.holding {
-		background: var(--md-sys-color-primary-container);
-		transition-delay: 120ms;
 	}
 
 	.main {
@@ -184,9 +131,6 @@
 		align-items: baseline;
 		gap: 0.375rem;
 		cursor: pointer;
-		/* A held finger opens the dish rather than selecting its text or a menu. */
-		user-select: none;
-		-webkit-touch-callout: none;
 	}
 
 	.text {
@@ -257,6 +201,12 @@
 	.vote {
 		flex-shrink: 0;
 		align-self: center;
+	}
+
+	/* The pot in the theme's colour, as the days' names on the paper. */
+	.cook {
+		flex-shrink: 0;
+		color: var(--kh-primary);
 	}
 
 	m3e-loading-indicator.swap {
