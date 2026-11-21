@@ -109,6 +109,7 @@
 		pickerOpen = false;
 		update(before.chain, { enabled: true, storeId: store.id, storeName: store.name, error: null });
 		send(before, 'store', { id: store.id, name: store.name });
+		picking = null;
 	}
 
 	/** Closed without a store, a chain that had none is off again, as it is saved. */

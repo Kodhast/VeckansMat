@@ -61,67 +61,48 @@
 			maxlength="200"
 			onkeydown={(e) => e.key === 'Escape' && (open = false)}
 		/>
-		<button type="submit" aria-label="Lägg till"><Icon name="add" /></button>
-		<button type="button" aria-label="Stäng" onclick={() => (open = false)}>
+		<button type="submit" class="kh-icon-btn kh-icon-btn--tonal" aria-label="Lägg till"
+			><Icon name="add" /></button
+		>
+		<button type="button" class="kh-icon-btn" aria-label="Stäng" onclick={() => (open = false)}>
 			<Icon name="close" />
 		</button>
 	</form>
 {/if}
 
 <style>
+	/* web-ui's sheet is a modal dialog, which would close at each item; this one lies over the
+	   tabs, just above the keyboard, with the sheet's shape and web-ui's field and buttons. */
 	.sheet {
 		position: fixed;
 		left: 0;
 		right: 0;
-		/* Over the floating menu and the plus button, which it stands in for while open. */
+		/* Over the tabs and the plus button, which it stands in for while open. */
 		z-index: 4;
-		padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom)) 1rem;
-		border-radius: 1.5rem 1.5rem 0 0;
-		background: var(--app-card);
-		box-shadow: 0 -4px 18px rgb(40 20 10 / 0.16);
+		padding: var(--kh-space-m) var(--kh-space-s)
+			calc(var(--kh-space-m) + env(safe-area-inset-bottom)) var(--kh-space-l);
+		border-radius: var(--kh-radius-sheet);
+		background: var(--kh-card);
+		box-shadow: 0 -4px 18px color-mix(in srgb, var(--kh-scrim) 16%, transparent);
 		display: flex;
 		align-items: center;
-		gap: 0.25rem;
+		gap: var(--kh-space-xs);
 	}
 
 	input {
 		flex: 1;
 		min-width: 0;
 		height: 3rem;
-		padding: 0 1rem;
+		padding: 0 var(--kh-space-l);
 		border: 0;
-		border-radius: 1.5rem;
-		background: var(--app-fill);
+		border-radius: var(--kh-radius-pill);
+		background: var(--kh-row-tint);
 		color: inherit;
-		font: inherit;
-		font-size: 1rem;
+		font: var(--kh-type-body);
 		outline: none;
 	}
 
 	input:focus-visible {
-		box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
-	}
-
-	button {
-		width: 3rem;
-		height: 3rem;
-		flex-shrink: 0;
-		padding: 0;
-		border: 0;
-		border-radius: 50%;
-		background: transparent;
-		color: var(--md-sys-color-on-surface-variant);
-		display: grid;
-		place-items: center;
-		cursor: pointer;
-	}
-
-	button[type='submit'] {
-		background: var(--md-sys-color-primary);
-		color: var(--md-sys-color-on-primary);
-	}
-
-	button :global(svg) {
-		width: 1.375rem;
+		box-shadow: inset 0 0 0 2px var(--kh-primary);
 	}
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
+	import Sheet from './Sheet.svelte';
 	import { chainLabel, type Chain, type StoreChoice } from './offers.ts';
 
 	// Finds a chain's store by town or name, through the app's server, and chooses it.
@@ -38,6 +39,17 @@
 		failed = null;
 		searching = false;
 	});
+	let input: HTMLInputElement | undefined = $state();
+	function clear() {
+		clearTimeout(timer);
+		latest++;
+		query = '';
+		stores = null;
+		failed = null;
+		searching = false;
+		input?.focus();
+	}
+
 	function oninput() {
 		clearTimeout(timer);
 		timer = setTimeout(search, 700);
@@ -67,35 +79,33 @@
 	}
 </script>
 
-<!-- detents is a list: a text would be read letter by letter once m3e has loaded (#116). -->
-<m3e-bottom-sheet
-	modal
-	handle
-	handle-label="Stäng"
-	hideable
-	detents={['full']}
-	open={open || undefined}
-	onclosed={onclose}
->
-	<span slot="header">{chain ? `Välj ${chainLabel(chain)}-butik` : ''}</span>
+<Sheet {open} title={chain ? `Välj ${chainLabel(chain)}-butik` : ''} full {onclose}>
 	{#if chain}
 		<div class="body">
-			<m3e-search-bar clearable clear-label="Rensa">
-				<span slot="leading" class="slot-icon"><Icon name="search" /></span>
+			<label class="kh-field">
 				<input
-					slot="input"
+					class="kh-field__input"
 					type="search"
 					autocomplete="off"
 					enterkeyhint="search"
-					placeholder="Sök på ort eller butik"
+					placeholder=" "
 					aria-label="Sök på ort eller butik"
 					bind:value={query}
+					bind:this={input}
 					{oninput}
 					onkeydown={(e) => e.key === 'Enter' && search()}
 				/>
-			</m3e-search-bar>
+				<span class="kh-field__label">Sök på ort eller butik</span>
+				{#if query}
+					<button type="button" class="kh-icon-btn" aria-label="Rensa" onclick={clear}>
+						<Icon name="close" />
+					</button>
+				{:else}
+					<Icon name="search" />
+				{/if}
+			</label>
 			{#if searching}
-				<m3e-loading-indicator aria-label="Söker"></m3e-loading-indicator>
+				<div class="kh-loading" role="status" aria-label="Söker"><kh-dots bouncing></kh-dots></div>
 			{:else if failed}
 				<p class="error-text" role="alert">{failed}</p>
 			{:else if stores?.length === 0}
@@ -107,13 +117,14 @@
 						<li>
 							<button
 								type="button"
+								class="kh-row"
 								aria-pressed={store.id === chosen}
 								onclick={() => onpick(store)}
 							>
-								<span class="dot" aria-hidden="true"></span>
-								<span class="text">
-									<span>{store.name}</span>
-									{#if store.place}<span class="place">{store.place}</span>{/if}
+								<span class="kh-row__leading"><span class="dot" aria-hidden="true"></span></span>
+								<span class="kh-row__text">
+									<span class="kh-row__title">{store.name}</span>
+									{#if store.place}<span class="kh-row__subtitle">{store.place}</span>{/if}
 								</span>
 							</button>
 						</li>
@@ -123,30 +134,20 @@
 			<p>Butiken sparas bara här i appen. Erbjudandena hämtas direkt när du valt.</p>
 		</div>
 	{/if}
-</m3e-bottom-sheet>
+</Sheet>
 
 <style>
-	m3e-bottom-sheet {
-		text-align: start;
-		--m3e-bottom-sheet-container-color: var(--md-sys-color-surface-container-low);
-		--m3e-bottom-sheet-header-font-weight: 700;
-	}
-
 	.body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		padding-bottom: 1rem;
-	}
-
-	m3e-loading-indicator {
-		align-self: center;
+		gap: var(--kh-space-m);
+		padding-bottom: var(--kh-space-l);
 	}
 
 	p {
-		margin: 0 0.25rem;
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
+		margin: 0 var(--kh-space-xs);
+		font: var(--kh-type-body-medium);
+		color: var(--kh-on-surface-variant);
 	}
 
 	ul {
@@ -155,50 +156,24 @@
 		list-style: none;
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: var(--kh-space-xs);
 	}
 
-	button {
-		width: 100%;
-		min-height: 4rem;
-		padding: 0.5rem;
-		border: 0;
-		border-radius: 1rem;
-		background: transparent;
-		color: inherit;
-		font: inherit;
-		text-align: left;
-		display: flex;
-		align-items: center;
-		gap: 0.875rem;
-		cursor: pointer;
-	}
-
-	button[aria-pressed='true'] {
-		background: var(--md-sys-color-secondary-container);
+	/* The chosen store's row is tinted, with its radio dot filled. */
+	.kh-row[aria-pressed='true'] {
+		background-color: var(--kh-secondary-container);
 	}
 
 	.dot {
-		flex: none;
 		width: 1.25rem;
 		height: 1.25rem;
 		border-radius: 50%;
-		border: 2px solid var(--md-sys-color-on-surface-variant);
+		border: 2px solid var(--kh-on-surface-variant);
 		box-sizing: border-box;
 	}
 
 	[aria-pressed='true'] .dot {
-		border-color: var(--md-sys-color-primary);
-		background: radial-gradient(var(--md-sys-color-primary) 45%, transparent 50%);
-	}
-
-	.text {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.place {
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
+		border-color: var(--kh-primary);
+		background: radial-gradient(var(--kh-primary) 45%, transparent 50%);
 	}
 </style>

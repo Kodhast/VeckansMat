@@ -30,7 +30,7 @@ test('the shopping list is the recipe lines once the month has cost the cap', as
 	await writeDay(page, 'måndag', 'Fiskgratäng');
 
 	await open(page, '/handla');
-	await page.locator('m3e-button', { hasText: 'Gör inköpslistan' }).click();
+	await page.getByRole('button', { name: 'Gör inköpslistan' }).click();
 	await expect(page.getByText('Appen har använt Claude så mycket som månadens tak')).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'Fiskgratäng' })).toBeVisible();
 	await expect(page.getByRole('checkbox', { name: '600 g torskfilé' })).toBeVisible();
