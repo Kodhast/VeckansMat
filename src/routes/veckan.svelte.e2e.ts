@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { countLoads, hold, open, reload, saved, writeDay } from '../../test/e2e';
+import { countLoads, open, reload, saved, writeDay } from '../../test/e2e';
 import { mondayOf, shownWeek, swedishToday } from '../lib/weeks';
 
 // The made-up dishes come from test/e2e-seed.sql. Veckan shows this week or the next, so the
@@ -372,7 +372,9 @@ test('a new dish is voted on with one button, and Aldrig mer is never suggested'
 	await expect(page.getByRole('button', { name: /Shakshuka/ })).toHaveCount(0);
 });
 
-test('a finger held on a dish opens it for cooking, and a tap still writes', async ({ page }) => {
+test('the pot on a dish opens it for cooking that day, and a tap still writes', async ({
+	page
+}) => {
 	await open(page, '/');
 	// Enter goes on to the next day, which is left again.
 	await writeDay(page, 'onsdag', 'Fiskgratäng');
@@ -380,23 +382,19 @@ test('a finger held on a dish opens it for cooking, and a tap still writes', asy
 	await writeDay(page, 'torsdag', 'Rester');
 	await page.keyboard.press('Escape');
 	await saved(page);
-
-	// The first times on a phone, the snackbar tells of the held finger.
 	await reload(page);
-	await expect(page.getByText('Håll kvar fingret för att laga rätten')).toBeVisible();
 
-	// A tap opens the day for writing, as before.
+	// A tap on the dish opens the day for writing, as before.
 	const dish = page.getByRole('button', { name: 'Middag onsdag: Fiskgratäng' });
 	await dish.click();
 	await expect(page.getByRole('textbox', { name: 'Middag onsdag' })).toBeVisible();
 	await page.keyboard.press('Escape');
 
-	// A held finger on a line without a dish does not cook anything.
-	await hold(page, page.getByRole('button', { name: 'Middag torsdag: Rester' }));
-	await expect(page).toHaveURL(/\/(\?vecka=[\d-]+)?$/);
-	await page.keyboard.press('Escape');
+	// A line without a dish has no pot, and the tip of the held finger is gone (#174).
+	await expect(page.getByRole('link', { name: 'Laga Rester' })).toHaveCount(0);
+	await expect(page.getByText('Håll kvar fingret för att laga rätten')).toHaveCount(0);
 
-	await hold(page, page.getByRole('button', { name: 'Middag onsdag: Fiskgratäng' }));
+	await page.getByRole('link', { name: 'Laga Fiskgratäng' }).click();
 	await expect(page).toHaveURL(/\/ratter\/1\/laga\?vecka=[\d-]+&dag=3$/);
 	await expect(page.getByText('Laga · onsdag')).toBeVisible();
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fiskgratäng');
@@ -406,12 +404,6 @@ test('a finger held on a dish opens it for cooking, and a tap still writes', asy
 	await page.locator('m3e-icon-button[aria-label="Tillbaka"]').click();
 	await expect(page).toHaveURL(/\/\?vecka=\d{4}-\d{2}-\d{2}$/);
 	await expect(page.getByRole('button', { name: 'Middag onsdag: Fiskgratäng' })).toBeVisible();
-
-	// After three times the snackbar is not shown again.
-	await page.evaluate(() => localStorage.setItem('laga-tips', '3'));
-	await reload(page);
-	await expect(page.getByRole('button', { name: 'Middag onsdag: Fiskgratäng' })).toBeVisible();
-	await expect(page.getByText('Håll kvar fingret för att laga rätten')).toHaveCount(0);
 
 	for (const day of ['onsdag', 'torsdag']) {
 		await page.getByRole('button', { name: new RegExp(`^Middag ${day}:`) }).click();
