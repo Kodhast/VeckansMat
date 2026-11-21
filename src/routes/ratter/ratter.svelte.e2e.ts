@@ -69,7 +69,7 @@ test('a new dish is added with its name and one tap, and can be filled in', asyn
 	await page.getByRole('link', { name: 'Skriv in själv' }).click();
 	await page.getByLabel('Portioner').fill('4');
 	await page.getByLabel('Ingredienser').fill('500 g köttfärs\n1 vitkål');
-	await page.locator('m3e-switch#lunchbox').click();
+	await page.getByRole('switch', { name: 'Passar till matlådor' }).click();
 	await page.getByRole('button', { name: 'Spara' }).click();
 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ärtsoppa');

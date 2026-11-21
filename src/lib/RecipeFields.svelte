@@ -119,11 +119,17 @@
 </section>
 <section class="kh-card">
 	<h2>Mer</h2>
-	<div class="switch">
-		<label for="lunchbox">Passar till matlådor</label>
-		<!-- m3e's switch until web-ui has the switch row (#174, V5). -->
-		<m3e-switch id="lunchbox" name="lunchbox" checked={lunchbox || undefined}></m3e-switch>
-	</div>
+	<label class="kh-row kh-switch-row">
+		<span class="kh-row__text"><span class="kh-row__title">Passar till matlådor</span></span>
+		<input
+			type="checkbox"
+			role="switch"
+			class="kh-switch"
+			id="lunchbox"
+			name="lunchbox"
+			checked={lunchbox}
+		/>
+	</label>
 	<label class="kh-field">
 		<input class="kh-field__input" id="tags" name="tags" placeholder=" " value={values.tags} />
 		<span class="kh-field__label">Taggar, med komma emellan</span>
@@ -185,11 +191,8 @@
 		gap: var(--kh-space-m);
 	}
 
-	.switch {
-		min-height: 3rem;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		font: var(--kh-type-body);
+	/* The row lies on the card's edge, as the fields do. */
+	.kh-switch-row {
+		padding-inline: 0;
 	}
 </style>

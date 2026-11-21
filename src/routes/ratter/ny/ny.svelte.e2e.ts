@@ -60,7 +60,7 @@ test('a dish with only a name is filled in from its own page and keeps its name'
 	// Tags and the lunch box switch do not make it more than a name, and are kept.
 	await open(page, '/ratter/3/redigera');
 	await page.getByLabel('Taggar, med komma emellan').fill('bröd');
-	await page.locator('m3e-switch#lunchbox').click();
+	await page.getByRole('switch', { name: 'Passar till matlådor' }).click();
 	await page.getByRole('button', { name: 'Spara' }).click();
 	await expect(page).toHaveURL('/ratter/3');
 
