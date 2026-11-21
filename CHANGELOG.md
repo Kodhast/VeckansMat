@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.13.0
+
+- Veckan har Kodhästs knappar, fält, ark, frågor och meddelanden, som i Android-apparna (#174): pilarna mellan veckorna, Föreslå veckan, önskerutan, frågan före ett nytt förslag, arket Vilka äter, arket med alla rätter, veckans erbjudanden och meddelandet med Ångra när en rätt byts. Rösten på en rätt är samma knapp i Kodhästs form.
+
 ## 0.12.0
 
 - Varje rätt på veckans meny har en gryta längst till höger som öppnar Laga för den dagen. Att hålla kvar fingret på rätten, och tipset om det, är borttaget. (#174)

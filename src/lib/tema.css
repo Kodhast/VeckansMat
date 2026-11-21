@@ -111,6 +111,16 @@
 }
 
 /* web-ui fills the icons in its buttons; the app's icons are lines (Icon.svelte). */
-:is(.kh-toolbar__tab, .kh-toolbar__action, .kh-menu__item, .kh-avatar__circle, .kh-icon-btn) > svg {
+:is(
+		.kh-toolbar__tab,
+		.kh-toolbar__action,
+		.kh-menu__item,
+		.kh-avatar__circle,
+		.kh-icon-btn,
+		.kh-btn,
+		.kh-chip,
+		.kh-field
+	)
+	> svg {
 	fill: none;
 }

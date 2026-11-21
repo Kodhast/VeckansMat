@@ -25,7 +25,7 @@ test('a week is written as quickly as on a note', async ({ page }) => {
 	await page.getByRole('button', { name: 'Rester', exact: true }).click();
 
 	// Lunch on a weekday.
-	await page.locator('m3e-button', { hasText: 'Lunch en vardag' }).click();
+	await page.getByRole('button', { name: 'Lunch en vardag' }).click();
 	await page.getByRole('group', { name: 'Välj dag för lunch' }).getByText('Tor').click();
 	await page.getByRole('textbox', { name: 'Lunch torsdag' }).fill('Ostfrallor');
 	await page.keyboard.press('Enter');
@@ -110,12 +110,12 @@ test('a day is chosen without writing, from the usual dishes or all of them', as
 	// All the dishes, by sort and by what is written, and a new one.
 	await page.getByRole('button', { name: 'Middag söndag: Linssoppa' }).click();
 	await page.getByRole('button', { name: 'Alla rätter' }).click();
-	const sheet = page.locator('m3e-bottom-sheet', { hasText: 'Middag söndag' });
+	const sheet = page.getByRole('dialog', { name: 'Middag söndag' });
 	await expect(sheet.getByRole('button', { name: /^Linssoppa/ })).toBeVisible();
-	await sheet.locator('m3e-filter-chip', { hasText: 'Fisk' }).click();
+	await sheet.getByRole('button', { name: 'Fisk', exact: true }).click();
 	await expect(sheet.getByRole('button', { name: /^Fiskgratäng/ })).toBeVisible();
 	await expect(sheet.getByRole('button', { name: /^Linssoppa/ })).toHaveCount(0);
-	await sheet.locator('m3e-filter-chip', { hasText: 'Fisk' }).click();
+	await sheet.getByRole('button', { name: 'Fisk', exact: true }).click();
 	const search = sheet.getByRole('searchbox', { name: 'Sök eller skriv en ny rätt' });
 	await expect(search).toBeInViewport();
 	await search.fill('soppa');
@@ -155,8 +155,15 @@ test('who eats is chosen per week, and nothing more is set there', async ({ page
 	// Who eats is a line on the menu, which opens a sheet with a chip for each person and nothing else.
 	const line = page.getByRole('button', { name: /äter$/ });
 	await line.click();
-	const chips = people.map((name) => page.locator('m3e-filter-chip', { hasText: name }));
-	await expect(chips[0]).not.toHaveAttribute('selected');
+	// A tap in the sheet leaves it open; one beside it closes it.
+	const sheet = page.getByRole('dialog', { name: 'Vilka äter?' });
+	await sheet.getByRole('heading', { name: 'Vilka äter?' }).click();
+	await expect(sheet).toBeVisible();
+	await page.mouse.click(180, 40);
+	await expect(sheet).toBeHidden();
+	await line.click();
+	const chips = people.map((name) => page.getByRole('button', { name, exact: true }));
+	await expect(chips[0]).toHaveAttribute('aria-pressed', 'false');
 	// Two quick taps both count, even before the first is saved.
 	await chips[0].click();
 	await chips[1].click();
@@ -168,7 +175,7 @@ test('who eats is chosen per week, and nothing more is set there', async ({ page
 	await reload(page);
 	await expect(line).toContainText('Ätare Ett och Ätare Två äter');
 	await line.click();
-	for (const chip of chips) await expect(chip).toHaveAttribute('selected');
+	for (const chip of chips) await expect(chip).toHaveAttribute('aria-pressed', 'true');
 
 	// The people are made up for this test, so they are removed again.
 	for (const name of people) {
@@ -184,7 +191,7 @@ test('the arrows go between this week and the next', async ({ page }) => {
 	const dates = page.locator('.dates');
 	const first = await dates.textContent();
 	// Only the arrow to the other week is a link.
-	const arrow = page.locator('m3e-icon-button[href]');
+	const arrow = page.locator('.week-nav a.kh-icon-btn');
 	await expect(arrow).toHaveCount(1);
 	await arrow.click();
 	await expect(dates).not.toHaveText(first!);
@@ -227,12 +234,12 @@ test('Claude suggests the week, and a day is swapped with one tap', async ({ pag
 	// the phone's clock is this Monday morning, when no day of either week has passed.
 	await page.clock.setFixedTime(new Date(`${mondayOf(swedishToday())}T08:00:00+01:00`));
 	await open(page, '/');
-	await page.locator('m3e-icon-button[href]').click();
+	await page.locator('.week-nav a.kh-icon-btn').click();
 	await expect(page.getByRole('button', { name: 'Middag måndag: tom' })).toBeVisible();
 
 	// When Claude fails, the week can be written by hand or asked for again.
 	await page.getByLabel('Något särskilt den här veckan?').fill('Krascha');
-	await page.locator('m3e-button', { hasText: 'Föreslå veckan' }).click();
+	await page.getByRole('button', { name: 'Föreslå veckan', exact: true }).click();
 	await expect(page.getByRole('alert')).toHaveText(/Claude kunde inte föreslå något just nu/);
 	await expect(page.getByRole('button', { name: 'Middag måndag: tom' })).toBeVisible();
 
@@ -251,13 +258,13 @@ test('Claude suggests the week, and a day is swapped with one tap', async ({ pag
 	await page.keyboard.press('Escape');
 	await expect(page.getByRole('button', { name: 'Middag tisdag: Ärtsoppa' })).toBeVisible();
 	await expect(page.getByLabel('Något särskilt den här veckan?')).toHaveValue('Något med pumpa');
-	await page.locator('m3e-button', { hasText: 'Föreslå veckan' }).click();
+	await page.getByRole('button', { name: 'Föreslå veckan', exact: true }).click();
 	saveRow();
-	const dialog = page.locator('m3e-dialog');
+	const dialog = page.locator('dialog.kh-dialog');
 	await expect(dialog).toHaveAttribute('open');
 	await expect(dialog).toContainText('Föreslå veckan?');
 	await expect(dialog).toContainText('Du har skrivit in tisdag själv.');
-	await dialog.locator('m3e-button', { hasText: 'Fyll i resten' }).click();
+	await dialog.getByRole('button', { name: 'Fyll i resten' }).click();
 	const monday = (dish: string) => page.getByRole('button', { name: `Middag måndag: ${dish}` });
 	await expect(monday('Blomkålssoppa')).toBeVisible();
 	await expect(page.getByRole('alert')).toHaveCount(0);
@@ -266,32 +273,32 @@ test('Claude suggests the week, and a day is swapped with one tap', async ({ pag
 	await expect(page.getByRole('button', { name: 'Lunch lördag: Varm korv' })).toBeVisible();
 
 	// A swap takes the next dish at once, and can be undone.
-	await page.locator('m3e-icon-button[aria-label="Byt Middag måndag"]').click();
+	await page.getByRole('button', { name: 'Byt Middag måndag' }).click();
 	await expect(monday('Pytt i panna')).toBeVisible();
-	const snackbar = page.locator('m3e-snackbar');
+	const snackbar = page.locator('.kh-snackbar');
 	await expect(snackbar).toContainText('Blomkålssoppa byttes mot Pytt i panna');
 	await snackbar.getByRole('button', { name: 'Ångra' }).click();
 	await expect(monday('Blomkålssoppa')).toBeVisible();
 
 	// Past the alternatives, Claude is asked for new dishes for the day.
 	for (const dish of ['Pytt i panna', 'Korv stroganoff', 'Fiskpinnar']) {
-		await page.locator('m3e-icon-button[aria-label="Byt Middag måndag"]').click();
+		await page.getByRole('button', { name: 'Byt Middag måndag' }).click();
 		await expect(monday(dish)).toBeVisible();
 	}
 
 	// A new suggestion for the week asks first, and nothing changes when it is cancelled.
-	const again = page.locator('m3e-icon-button[aria-label="Nytt förslag på hela veckan"]');
+	const again = page.getByRole('button', { name: 'Nytt förslag på hela veckan' });
 	await again.click();
 	await expect(dialog).toContainText('Föreslå veckan igen?');
 	await expect(dialog).toContainText('Du har skrivit in tisdag själv.');
-	await dialog.locator('m3e-button', { hasText: 'Avbryt' }).click();
+	await dialog.getByRole('button', { name: 'Avbryt' }).click();
 	await expect(dialog).not.toHaveAttribute('open');
 	await expect(monday('Fiskpinnar')).toBeVisible();
 
 	// Only Claude's dishes keeps what was written by hand.
 	const loads = countLoads(page);
 	await again.click();
-	await dialog.locator('m3e-button', { hasText: 'Bara Claudes rätter' }).click();
+	await dialog.getByRole('button', { name: 'Bara Claudes rätter' }).click();
 	await expect(monday('Blomkålssoppa')).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Middag tisdag: Ärtsoppa' })).toBeVisible();
 	await saved(page);
@@ -302,7 +309,7 @@ test('Claude suggests the week, and a day is swapped with one tap', async ({ pag
 
 	// The whole week replaces it too; with only Claude's dishes left, the question is shorter.
 	await again.click();
-	await dialog.locator('m3e-button', { hasText: 'Hela veckan' }).click();
+	await dialog.getByRole('button', { name: 'Hela veckan' }).click();
 	await expect(page.getByRole('button', { name: 'Middag tisdag: Kycklinggryta' })).toBeVisible();
 	await again.click();
 	await expect(dialog).toContainText(/Claudes rätter för vecka \d+ byts mot nya förslag\./);
@@ -328,10 +335,10 @@ test('a new dish is voted on with one button, and Aldrig mer is never suggested'
 	}
 
 	// Only a new dish on a day that has passed: not one eaten before, nor one still to come.
-	const vote = (dish: string) => page.locator(`m3e-button[aria-label^="Röst på ${dish}:"]`);
+	const vote = (dish: string) => page.locator(`button[aria-label^="Röst på ${dish}:"]`);
 	await expect(vote('Linssoppa')).toHaveCount(0);
 	await expect(vote('Pho')).toHaveCount(0);
-	await expect(page.locator('m3e-icon-button[aria-label="Byt Middag torsdag"]')).toHaveCount(0);
+	await expect(page.getByRole('button', { name: 'Byt Middag torsdag' })).toHaveCount(0);
 
 	// Each tap takes the next vote, saved without loading the page.
 	const loads = countLoads(page);
@@ -366,8 +373,8 @@ test('a new dish is voted on with one button, and Aldrig mer is never suggested'
 
 	// Claude's stand-in chooses it for Monday, and the app takes the next dish instead.
 	await open(page, '/');
-	await page.locator('m3e-button', { hasText: 'Föreslå veckan' }).click();
-	await page.locator('m3e-dialog m3e-button', { hasText: 'Hela veckan' }).click();
+	await page.getByRole('button', { name: 'Föreslå veckan', exact: true }).click();
+	await page.locator('dialog.kh-dialog').getByRole('button', { name: 'Hela veckan' }).click();
 	await expect(page.getByRole('button', { name: 'Middag måndag: Pytt i panna' })).toBeVisible();
 	await expect(page.getByRole('button', { name: /Shakshuka/ })).toHaveCount(0);
 });

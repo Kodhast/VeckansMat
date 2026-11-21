@@ -7,8 +7,9 @@ h2 {
 }
 
 /* Kodhäst's two dots before every section heading, set here once. A heading that is a fold
-   button (FoldCard) has none: its icon already leads, and the dots would sit on a line of their own. */
-h2:not(:has(> button))::before {
+   button (FoldCard) has none: its icon already leads, and the dots would sit on a line of their own.
+   Nor have web-ui's dialogs and sheets, as in Android. */
+h2:not(:has(> button), .kh-dialog__title, .kh-sheet__title)::before {
 	content: '';
 	display: inline-block;
 	width: 0.375em;

@@ -9,12 +9,12 @@ const thisWeek = `/?vecka=${mondayOf(swedishToday())}`;
 test('a dish chosen for an offer shows its price tag, which opens the offers', async ({ page }) => {
 	await open(page, thisWeek);
 	await expect(page.getByText('Med erbjudanden från ICA och Willys.')).toBeVisible();
-	await page.locator('m3e-icon-button[href]').click();
+	await page.getByRole('link', { name: 'Nästa vecka' }).click();
 	await expect(
 		page.getByText('Med erbjudandena som gäller nu, när ni handlar: ICA och Willys.')
 	).toBeVisible();
 
-	await page.locator('m3e-button', { hasText: 'Föreslå veckan' }).click();
+	await page.getByRole('button', { name: 'Föreslå veckan', exact: true }).click();
 	const monday = page.getByRole('button', { name: 'Middag måndag: Blomkålssoppa' });
 	await expect(monday).toBeVisible();
 	// The price tag stands where the reason would.
@@ -24,7 +24,7 @@ test('a dish chosen for an offer shows its price tag, which opens the offers', a
 	await expect(page.getByRole('button', { name: /^Erbjudande:/ })).toHaveCount(1);
 
 	await tag.click();
-	const sheet = page.locator('m3e-bottom-sheet', { hasText: 'Veckans erbjudanden' });
+	const sheet = page.getByRole('dialog', { name: 'Veckans erbjudanden' });
 	await expect(sheet.getByRole('heading', { name: 'I veckans meny' })).toBeVisible();
 	await expect(sheet.getByRole('listitem').first()).toContainText(
 		'Kycklingfilé 99 kr/kg ICA · medlemspris · t.o.m. 31 december Mån'
@@ -36,10 +36,10 @@ test('a dish chosen for an offer shows its price tag, which opens the offers', a
 	await expect(sheet).not.toContainText('Läsk');
 
 	// A chain at a time.
-	await sheet.locator('m3e-filter-chip', { hasText: 'Willys 2' }).click();
+	await sheet.getByRole('button', { name: 'Willys 2' }).click();
 	await expect(sheet.getByRole('heading', { name: 'I veckans meny' })).toHaveCount(0);
 	await expect(sheet.getByRole('listitem')).toHaveCount(2);
-	await sheet.locator('m3e-filter-chip', { hasText: 'Alla 3' }).click();
+	await sheet.getByRole('button', { name: 'Alla 3' }).click();
 	await expect(sheet.getByRole('listitem')).toHaveCount(3);
 	await page.keyboard.press('Escape');
 
@@ -55,6 +55,6 @@ test('a dish chosen for an offer shows its price tag, which opens the offers', a
 		await page.getByRole('region', { name: chain }).getByRole('switch', { name: chain }).click();
 	}
 	await open(page, thisWeek);
-	await expect(page.locator('m3e-button', { hasText: 'Föreslå veckan' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Föreslå veckan', exact: true })).toBeVisible();
 	await expect(page.getByText(/^Med erbjudanden/)).toHaveCount(0);
 });

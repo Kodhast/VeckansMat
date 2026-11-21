@@ -2,8 +2,6 @@
 	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { ActionResult } from '$app/forms';
-	import type { M3eDialogElement } from '@m3e/web/dialog';
-	import type { M3eSnackbarElement } from '@m3e/web/snackbar';
 	import { postAction, type Fields } from '#lib/actions.ts';
 	import DayEditor from '#lib/DayEditor.svelte';
 	import DishPicker from '#lib/DishPicker.svelte';
@@ -11,6 +9,7 @@
 	import MenuCard from '#lib/MenuCard.svelte';
 	import MenuLine from '#lib/MenuLine.svelte';
 	import OffersSheet from '#lib/OffersSheet.svelte';
+	import Snackbar from '#lib/Snackbar.svelte';
 	import { chainLabel } from '#lib/offers.ts';
 	import WeekHeader from '#lib/WeekHeader.svelte';
 	import WhoEats from '#lib/WhoEats.svelte';
@@ -181,10 +180,15 @@
 		else suggest();
 	}
 
-	function onAnswer(event: Event & { currentTarget: M3eDialogElement }) {
-		const dialog = event.currentTarget;
-		const answer = dialog.returnValue;
-		dialog.returnValue = '';
+	let question: HTMLDialogElement;
+	$effect(() => {
+		if (asking && !question.open) question.showModal();
+	});
+
+	// The answer is the value of the button that closed the dialog; Avbryt and Escape have none.
+	function onAnswer() {
+		const answer = question.returnValue;
+		question.returnValue = '';
 		asking = false;
 		if (answer) suggest(answer === 'week');
 	}
@@ -201,11 +205,11 @@
 		if (swapping === key) swapping = null;
 	}
 
-	async function undoSwap(event: ToggleEvent & { currentTarget: M3eSnackbarElement }) {
-		if (event.newState !== 'closed' || !swapped) return;
+	async function undoSwap(undo: boolean) {
+		if (!swapped) return;
 		const { before, weekStart } = swapped;
 		swapped = null;
-		if (!event.currentTarget.isActionTaken) return;
+		if (!undo) return;
 		await post('restore', {
 			weekStart,
 			weekday: before.weekday,
@@ -359,29 +363,31 @@
 <WeekHeader weekStart={week.weekStart} thisWeek={data.thisWeek} nextWeek={data.nextWeek}>
 	{#snippet actions()}
 		{#if hasSuggestion}
-			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-			<m3e-icon-button
+			<button
+				type="button"
+				class="kh-icon-btn"
 				aria-label="Nytt förslag på hela veckan"
-				disabled={busy || undefined}
+				disabled={busy}
 				onclick={askSuggest}
 			>
 				<Icon name="suggest" />
-			</m3e-icon-button>
+			</button>
 		{/if}
 	{/snippet}
 </WeekHeader>
 
 <main class="page">
 	{#if !hasSuggestion && !suggesting}
-		<section class="card">
-			<m3e-form-field variant="filled">
-				<label slot="label" for="wish">Något särskilt den här veckan? (frivilligt)</label>
+		<section class="kh-card">
+			<label class="kh-field">
 				<input
-					id="wish"
+					class="kh-field__input"
+					placeholder=" "
 					autocomplete="off"
 					bind:value={() => wish, (value) => (wishes[week.weekStart] = value)}
 				/>
-			</m3e-form-field>
+				<span class="kh-field__label">Något särskilt den här veckan? (frivilligt)</span>
+			</label>
 			{#if offerChains}
 				<p class="offers">
 					<Icon name="tag" />
@@ -390,15 +396,9 @@
 						: `Med erbjudanden från ${offerChains}.`}
 				</p>
 			{/if}
-			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-			<m3e-button
-				class="suggest"
-				variant="filled"
-				disabled={busy || undefined}
-				onclick={askSuggest}
-			>
-				<span slot="icon" class="slot-icon"><Icon name="suggest" /></span>Föreslå veckan
-			</m3e-button>
+			<button type="button" class="kh-btn suggest" disabled={busy} onclick={askSuggest}>
+				<Icon name="suggest" />Föreslå veckan
+			</button>
 		</section>
 	{/if}
 
@@ -422,7 +422,7 @@
 		{/snippet}
 		{#if suggesting}
 			<div class="suggesting">
-				<m3e-loading-indicator></m3e-loading-indicator>
+				<kh-dots bouncing></kh-dots>
 				<p role="status">Claude sätter ihop veckan …</p>
 				<p class="hint">Utgår från era gamla veckor och rätter. Brukar ta 10–20 sekunder.</p>
 			</div>
@@ -442,14 +442,18 @@
 			</ol>
 			{#if freeLunchDays.length}
 				<div class="add-lunch">
-					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-					<m3e-button variant="text" onclick={() => (choosingLunch = !choosingLunch)}>
-						<span slot="icon" class="slot-icon"><Icon name="add" /></span>Lunch en vardag
-					</m3e-button>
+					<button
+						type="button"
+						class="kh-btn kh-btn--text"
+						aria-expanded={choosingLunch}
+						onclick={() => (choosingLunch = !choosingLunch)}
+					>
+						<Icon name="add" />Lunch en vardag
+					</button>
 					{#if choosingLunch}
-						<div class="choices" role="group" aria-label="Välj dag för lunch">
+						<div class="kh-chips" role="group" aria-label="Välj dag för lunch">
 							{#each freeLunchDays as weekday (weekday)}
-								<button type="button" class="chip" onclick={() => addLunch(weekday)}
+								<button type="button" class="kh-chip" onclick={() => addLunch(weekday)}
 									>{WEEKDAYS[weekday - 1]}</button
 								>
 							{/each}
@@ -477,60 +481,53 @@
 
 <OffersSheet open={showingOffers} used={usedOffers} onclose={() => (showingOffers = false)} />
 
-<m3e-dialog open={asking || undefined} onclosed={onAnswer}>
-	<span slot="header" class="dialog-header">
+<dialog bind:this={question} class="kh-dialog" aria-labelledby="question" onclose={onAnswer}>
+	<h2 id="question" class="kh-dialog__title">
 		{hasSuggestion ? 'Föreslå veckan igen?' : 'Föreslå veckan?'}<Icon name="suggest" />
-	</span>
-	{#if byHand}
-		Du har skrivit in {byHand} själv. Ska Claude {hasSuggestion
-			? 'byta bara sina rätter, eller hela veckan'
-			: 'fylla i resten, eller föreslå hela veckan'}?
-	{:else}
-		Claudes rätter för vecka {isoWeek(week.weekStart).week} byts mot nya förslag.
-	{/if}
-	<div slot="actions" class="dialog-actions">
+	</h2>
+	<p class="kh-dialog__text">
 		{#if byHand}
-			<m3e-button>
-				<m3e-dialog-action return-value="rest">
-					{hasSuggestion ? 'Bara Claudes rätter' : 'Fyll i resten'}
-				</m3e-dialog-action>
-			</m3e-button>
+			Du har skrivit in {byHand} själv. Ska Claude {hasSuggestion
+				? 'byta bara sina rätter, eller hela veckan'
+				: 'fylla i resten, eller föreslå hela veckan'}?
+		{:else}
+			Claudes rätter för vecka {isoWeek(week.weekStart).week} byts mot nya förslag.
 		{/if}
-		<m3e-button>
-			<m3e-dialog-action return-value="week"
-				>{byHand ? 'Hela veckan' : 'Föreslå igen'}</m3e-dialog-action
-			>
-		</m3e-button>
-		<m3e-button><m3e-dialog-action>Avbryt</m3e-dialog-action></m3e-button>
-	</div>
-</m3e-dialog>
+	</p>
+	<form method="dialog" class="kh-dialog__actions">
+		<button class="kh-btn kh-btn--text" value="">Avbryt</button>
+		{#if byHand}
+			<button class="kh-btn kh-btn--text" value="rest">
+				{hasSuggestion ? 'Bara Claudes rätter' : 'Fyll i resten'}
+			</button>
+		{/if}
+		<button class="kh-btn kh-btn--text" value="week"
+			>{byHand ? 'Hela veckan' : 'Föreslå igen'}</button
+		>
+	</form>
+</dialog>
 
 {#key swapped}
 	{#if swapped}
-		<m3e-snackbar action="Ångra" duration="6000" open ontoggle={undoSwap}>
-			{swapped.before.text} byttes mot {swapped.text}
-		</m3e-snackbar>
+		<Snackbar
+			text="{swapped.before.text} byttes mot {swapped.text}"
+			action="Ångra"
+			onclose={undoSwap}
+		/>
 	{/if}
 {/key}
 
 <style>
-	.dialog-header {
+	.kh-dialog__title {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		color: var(--md-sys-color-on-surface);
 	}
 
-	.dialog-header :global(svg) {
+	.kh-dialog__title :global(svg) {
 		flex-shrink: 0;
-		color: var(--md-sys-color-primary);
-	}
-
-	.dialog-actions {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
+		color: var(--kh-primary);
 	}
 
 	.suggest {

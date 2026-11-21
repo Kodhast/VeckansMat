@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
 	import { nameKey } from './names.ts';
+	import Sheet from './Sheet.svelte';
 	import { byName, CATEGORIES, isDish, matching, type Category } from './recipes.ts';
 	import type { RecipeSummary } from './server/db/recipes.ts';
 	import { eatenText } from './weeks.ts';
@@ -53,39 +54,38 @@
 	}
 </script>
 
-<!-- detents is a list: a text would be read letter by letter once m3e has loaded (#116). -->
-<m3e-bottom-sheet
-	modal
-	handle
-	handle-label="Stäng"
-	hideable
-	detents={['full']}
-	open={open || undefined}
-	onclosed={onclose}
->
-	<span slot="header">{name}</span>
+<Sheet {open} title={name} full {onclose}>
 	<!-- The dishes stay while the sheet slides away. -->
 	{#if name}
 		<div class="body">
-			<m3e-search-bar clearable clear-label="Rensa">
-				<span slot="leading" class="slot-icon"><Icon name="search" /></span>
+			<label class="kh-field">
 				<input
-					slot="input"
+					class="kh-field__input"
 					type="search"
 					autocomplete="off"
 					enterkeyhint="done"
-					placeholder="Sök eller skriv en ny rätt"
+					placeholder=" "
 					aria-label="Sök eller skriv en ny rätt"
 					bind:value={query}
 					{onkeydown}
 				/>
-			</m3e-search-bar>
-			<div class="sorts" role="group" aria-label="Sort">
+				<span class="kh-field__label">Sök eller skriv en ny rätt</span>
+				{#if query}
+					<button type="button" class="kh-icon-btn" aria-label="Rensa" onclick={() => (query = '')}>
+						<Icon name="close" />
+					</button>
+				{:else}
+					<Icon name="search" />
+				{/if}
+			</label>
+			<div class="kh-chips" role="group" aria-label="Sort">
 				{#each sorts as sort (sort.key)}
-					<m3e-filter-chip
-						selected={category === sort.key || undefined}
-						onchange={(e: Event & { currentTarget: HTMLElement & { selected: boolean } }) =>
-							(category = e.currentTarget.selected ? sort.key : null)}>{sort.label}</m3e-filter-chip
+					<button
+						type="button"
+						class="kh-chip"
+						aria-pressed={category === sort.key}
+						onclick={() => (category = category === sort.key ? null : sort.key)}
+						>{sort.label}</button
 					>
 				{/each}
 			</div>
@@ -114,25 +114,13 @@
 			</ul>
 		</div>
 	{/if}
-</m3e-bottom-sheet>
+</Sheet>
 
 <style>
-	m3e-bottom-sheet {
-		text-align: start;
-		--m3e-bottom-sheet-container-color: var(--md-sys-color-surface-container-low);
-		--m3e-bottom-sheet-header-font-weight: 700;
-	}
-
 	.body {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-	}
-
-	.sorts {
-		display: flex;
-		gap: 0.5rem;
-		overflow-x: auto;
 	}
 
 	ul {
@@ -142,10 +130,15 @@
 	}
 
 	li + li {
-		border-top: 1px solid var(--md-sys-color-outline-variant);
+		border-top: 1px solid var(--kh-outline-variant);
 	}
 
-	button {
+	/* web-ui's field has its own button to clear it. */
+	input::-webkit-search-cancel-button {
+		appearance: none;
+	}
+
+	li button {
 		width: 100%;
 		min-height: 3.5rem;
 		padding: 0.375rem 0.25rem;
@@ -162,13 +155,13 @@
 
 	.meta {
 		font-size: 0.75rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.favourite {
 		margin-left: 0.25rem;
 		vertical-align: -0.125rem;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	.new {
@@ -176,6 +169,6 @@
 		align-items: center;
 		justify-content: flex-start;
 		gap: 0.5rem;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 </style>

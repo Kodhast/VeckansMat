@@ -73,10 +73,15 @@
 			{onkeydown}
 			{@attach focus}
 		/>
-		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-		<m3e-icon-button aria-label="Töm raden" onpointerdown={keepFocus} onclick={() => onwrite('')}>
+		<button
+			type="button"
+			class="kh-icon-btn"
+			aria-label="Töm raden"
+			onpointerdown={keepFocus}
+			onclick={() => onwrite('')}
+		>
 			<Icon name="close" />
-		</m3e-icon-button>
+		</button>
 	</div>
 	{#if !written}
 		{#if usual.length}<p class="heading">Brukar ni äta</p>{/if}
@@ -127,9 +132,9 @@
 			{/if}
 		</ul>
 	{/if}
-	<div class="choices">
+	<div class="kh-chips choices">
 		{#each NOT_DISHES as other (other)}
-			<button type="button" class="chip" onpointerdown={keepFocus} onclick={() => onwrite(other)}
+			<button type="button" class="kh-chip" onpointerdown={keepFocus} onclick={() => onwrite(other)}
 				>{other}</button
 			>
 		{/each}
@@ -178,7 +183,7 @@
 		outline: none;
 	}
 
-	.line m3e-icon-button {
+	.line .kh-icon-btn {
 		margin-top: 0.125rem;
 	}
 

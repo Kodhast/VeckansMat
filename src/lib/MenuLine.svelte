@@ -76,17 +76,19 @@
 	{#if onvote}
 		<div class="vote"><VoteButton name={text} {vote} {onvote} /></div>
 	{:else if swapping}
-		<m3e-loading-indicator class="swap" aria-label="Byter {name}"></m3e-loading-indicator>
+		<span class="swap waiting" role="status" aria-label="Byter {name}"
+			><kh-dots bouncing></kh-dots></span
+		>
 	{:else if swappable}
-		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-		<m3e-icon-button
-			class="swap"
+		<button
+			type="button"
+			class="kh-icon-btn swap"
 			aria-label="Byt {name}"
-			disabled={busy || undefined}
+			disabled={busy}
 			onclick={onswap}
 		>
 			<Icon name="swap" />
-		</m3e-icon-button>
+		</button>
 	{/if}
 	{#if cookHref}
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolved by Veckan, with the week and day after it -->
@@ -209,8 +211,12 @@
 		color: var(--kh-primary);
 	}
 
-	m3e-loading-indicator.swap {
-		width: 2.5rem;
-		height: 2.5rem;
+	/* Where the swap button stood, as large. */
+	.waiting {
+		width: 3rem;
+		height: 3rem;
+		display: grid;
+		place-items: center;
+		--kh-dots-size: 6px;
 	}
 </style>

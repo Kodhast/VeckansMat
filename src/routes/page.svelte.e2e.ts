@@ -128,3 +128,24 @@ test('the app loads again when it comes back on another day', async ({ page }) =
 	await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
 	await expect.poll(() => loads).toBe(1);
 });
+
+test("a new version steps aside while web-ui's snackbar shows", async ({ page }) => {
+	await open(page, '/');
+	await page.route('**/_app/version.json', (route) =>
+		route.fulfill({ json: { version: '99.0.0' } })
+	);
+	await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+	const notice = page.getByText('Ny version finns');
+	await expect(notice).toBeVisible();
+
+	// As the undo after a dish is swapped on Veckan.
+	await page.evaluate(() =>
+		document.body.insertAdjacentHTML(
+			'beforeend',
+			'<div id="undo" class="kh-snackbar-host"><div class="kh-snackbar">Ångra</div></div>'
+		)
+	);
+	await expect(notice).toBeHidden();
+	await page.evaluate(() => document.getElementById('undo')?.remove());
+	await expect(notice).toBeVisible();
+});
