@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.15.0
+
+- Ny rätt, Redigera rätt och Laga har Kodhästs topprad, fält, val, knappar och kort, som i Android-apparna (#174). Laga visar dagen, tiden och portionerna på en rad under rubriken. Reglaget för matlådor och kryssen i Laga byts när Kodhästs kryssrad och reglage finns.
+
 ## 0.14.0
 
 - Rätter och sidan för en rätt har Kodhästs sökfält, segmentval, rader, kort och toppraden med tillbakapil, som i Android-apparna (#174). Rättens sort, bas, portioner och tid står som etiketter i ett kort med Laga maten och rösten. De utfällbara korten (sorterna i Rätter, delarna av en rätt, avdelningarna i Handla och Laga) är Kodhästs utfällbara rad.

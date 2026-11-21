@@ -5,7 +5,6 @@
 	import FormHeader from '#lib/FormHeader.svelte';
 	import Icon from '#lib/Icon.svelte';
 	import RecipeFields from '#lib/RecipeFields.svelte';
-	import SubmitButton from '#lib/SubmitButton.svelte';
 	import { recipeUrl, siteName } from '#lib/links.ts';
 	import { MAX_PHOTOS, shrinkPhoto } from '#lib/photos.ts';
 	import { timesText } from '#lib/recipes.ts';
@@ -96,27 +95,29 @@
 		<FormHeader title="Ny rätt" back={restart} backLabel="Börja om" />
 
 		{#if review.existing}
-			<section class="card notice">
-				<strong>{review.existing.name} finns redan</strong>
-				{#if review.existing.onlyName}
-					<span>{existingText(review.existing.timesEaten)}</span>
-				{:else}
-					<span>
-						Den har redan ingredienser eller steg. Byt namn för att spara den här som en ny rätt.
-					</span>
-					<a href={resolve('/ratter/[id]', { id: String(review.existing.id) })}
-						>Öppna {review.existing.name}</a
-					>
-				{/if}
+			<section class="kh-notice">
+				<span class="kh-notice__text">
+					<strong class="kh-notice__title">{review.existing.name} finns redan</strong>
+					{#if review.existing.onlyName}
+						<span>{existingText(review.existing.timesEaten)}</span>
+					{:else}
+						<span>
+							Den har redan ingredienser eller steg. Byt namn för att spara den här som en ny rätt.
+						</span>
+						<a href={resolve('/ratter/[id]', { id: String(review.existing.id) })}
+							>Öppna {review.existing.name}</a
+						>
+					{/if}
+				</span>
 			</section>
 		{:else if form?.error}
 			<p class="error" role="alert">{form.error}</p>
 		{:else if review.target}
-			<p class="banner done">
+			<p class="kh-notice">
 				<Icon name="check" />Fyller i {review.target.name}. Kolla att det stämmer och spara.
 			</p>
 		{:else if review.source}
-			<p class="banner done">
+			<p class="kh-notice">
 				<Icon name="check" />{review.source}. Kolla att det stämmer och spara.
 			</p>
 		{/if}
@@ -139,8 +140,8 @@
 		/>
 
 		{#if reading}
-			<div class="card reading">
-				<m3e-loading-indicator></m3e-loading-indicator>
+			<div class="kh-card reading">
+				<kh-dots bouncing></kh-dots>
 				<p role="status">Läser receptet …</p>
 				<p class="muted">Det brukar ta några sekunder.</p>
 			</div>
@@ -149,7 +150,7 @@
 				<p class="error" role="alert">{form.readError}</p>
 			{/if}
 
-			<section class="card">
+			<section class="kh-card">
 				<p class="muted">
 					{#if data.target}
 						Klistra in en länk eller texten till receptet på {data.target.name}, eller fotografera
@@ -186,13 +187,18 @@
 					</p>
 				{/if}
 
-				<m3e-form-field variant="filled" hide-subscript="always">
-					<label slot="label" for="text">
+				<label class="kh-field">
+					<textarea
+						class={['kh-field__input', !photos.length && 'tall']}
+						id="text"
+						name="text"
+						rows={photos.length ? 2 : 5}
+						placeholder=" "
+						bind:value={text}></textarea>
+					<span class="kh-field__label">
 						Länk eller recepttext{photos.length ? ' (frivilligt)' : ''}
-					</label>
-					<textarea id="text" name="text" rows={photos.length ? 2 : 5} bind:value={text}></textarea>
-					<m3e-textarea-autosize for="text"></m3e-textarea-autosize>
-				</m3e-form-field>
+					</span>
+				</label>
 
 				{#if link && !photos.length}
 					<p class="muted small with-icon"><Icon name="link" />En länk till {siteName(link)}</p>
@@ -201,10 +207,10 @@
 
 			{#if !photos.length}
 				<div class="pick">
-					<button type="button" class="card" onclick={() => camera?.click()}>
+					<button type="button" class="kh-card" onclick={() => camera?.click()}>
 						<span class="pick-icon"><Icon name="camera" /></span>Ta foto
 					</button>
-					<button type="button" class="card" onclick={() => gallery?.click()}>
+					<button type="button" class="kh-card" onclick={() => gallery?.click()}>
 						<span class="pick-icon round"><Icon name="image" /></span>Välj bilder
 					</button>
 				</div>
@@ -229,7 +235,7 @@
 			{#if shrinking}
 				<p class="muted small" role="status">Gör bilderna mindre …</p>
 			{/if}
-			<SubmitButton variant="filled" size="medium">Läs in receptet</SubmitButton>
+			<button class="kh-btn">Läs in receptet</button>
 		{/if}
 	</form>
 
@@ -237,9 +243,9 @@
 	{#if !reading && form?.kind}
 		<form method="POST" action="?/fillIn{till}" use:enhance class="form-page fill-in">
 			<input type="hidden" name="text" value={form.text} />
-			<SubmitButton variant="text">
+			<button class="kh-btn kh-btn--text">
 				{form.kind === 'link' ? 'Fyll i själv, med länken sparad' : 'Fyll i själv'}
-			</SubmitButton>
+			</button>
 		</form>
 	{/if}
 {/if}
@@ -247,7 +253,7 @@
 <style>
 	.muted {
 		margin: 0 0.125rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.small {
@@ -262,7 +268,7 @@
 
 	.with-icon :global(svg) {
 		width: 1.125rem;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	.pick,
@@ -283,12 +289,8 @@
 	.pick button {
 		min-height: 4.75rem;
 		padding: 0.5rem;
-		border: 0;
-		border-radius: 1.25rem;
-		color: var(--md-sys-color-on-surface);
-		font: inherit;
-		font-size: 0.875rem;
-		font-weight: 500;
+		color: var(--kh-on-surface);
+		font: var(--kh-type-item-title);
 		align-items: center;
 		justify-content: center;
 		gap: 0.375rem;
@@ -296,7 +298,7 @@
 	}
 
 	.pick button:focus-visible {
-		outline: 2px solid var(--md-sys-color-primary);
+		outline: 2px solid var(--kh-primary);
 		outline-offset: 2px;
 	}
 
@@ -304,8 +306,8 @@
 		width: 2rem;
 		height: 2rem;
 		border-radius: 0.625rem;
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
+		background: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
 		display: grid;
 		place-items: center;
 	}
@@ -328,7 +330,7 @@
 	.photo {
 		position: relative;
 		overflow: hidden;
-		background: var(--md-sys-color-surface-container-highest);
+		background: var(--kh-surface-variant);
 	}
 
 	.photo img {
@@ -356,9 +358,9 @@
 	}
 
 	.another {
-		border: 2px dashed var(--md-sys-color-outline-variant);
+		border: 2px dashed var(--kh-outline-variant);
 		background: transparent;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 		font: inherit;
 		font-size: 0.8125rem;
 		font-weight: 500;
@@ -383,32 +385,20 @@
 
 	.reading p[role='status'] {
 		margin: 0.625rem 0 0;
-		font-size: 1.25rem;
-		font-weight: 700;
+		font: var(--kh-type-headline);
 	}
 
-	.done {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.625rem;
+	.reading kh-dots {
+		--kh-dots-size: 12px;
+		color: var(--kh-primary);
 	}
 
-	.done :global(svg) {
-		width: 1.125rem;
-		height: 1.125rem;
-		flex-shrink: 0;
-		margin-top: 0.0625rem;
+	/* Room to paste a recipe: web-ui's field grows with its text and leaves rows aside. */
+	.tall {
+		min-block-size: 9rem;
 	}
 
-	.notice {
-		gap: 0.375rem;
-	}
-
-	.notice span {
-		color: var(--md-sys-color-on-surface-variant);
-	}
-
-	.notice a {
-		color: var(--md-sys-color-primary);
+	.kh-notice a {
+		color: inherit;
 	}
 </style>

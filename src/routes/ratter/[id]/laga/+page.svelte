@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import {
 		DEFAULT_EATERS,
 		DEFAULT_SERVINGS,
@@ -171,30 +172,34 @@
 	<title>Laga {recipe.name} – Veckans mat</title>
 </svelte:head>
 
-<header>
-	<m3e-icon-button href={data.back ?? `/ratter/${recipe.id}`} aria-label="Tillbaka">
+<header class="kh-topbar">
+	<!-- eslint-disable svelte/no-navigation-without-resolve -- the back link to Veckan comes from the server -->
+	<a
+		class="kh-icon-btn kh-icon-btn--tonal"
+		href={data.back ?? resolve('/ratter/[id]', { id: String(recipe.id) })}
+		aria-label="Tillbaka"
+	>
 		<Icon name="back" />
-	</m3e-icon-button>
-	{#if canWake}
-		<m3e-button
-			variant="tonal"
-			size="small"
-			toggle
-			selected={awake || undefined}
-			onchange={(e: Event & { currentTarget: HTMLElement & { selected: boolean } }) =>
-				(awake = e.currentTarget.selected)}
-		>
-			<span slot="icon" class="slot-icon"><Icon name="awake" /></span>
-			{awake ? 'Skärmen hålls tänd' : 'Håll skärmen tänd'}
-		</m3e-button>
-	{/if}
+	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
+	<h1 class="kh-topbar__title"><kh-dots></kh-dots><span>{recipe.name}</span></h1>
 </header>
 
-<main class:timing={timers.length > 0}>
+<main class={['kh-page', timers.length > 0 && 'timing']}>
 	<div class="title">
-		<p class="view-label">Laga{data.dayName ? ` · ${data.dayName}` : ''}</p>
-		<h1>{recipe.name}</h1>
-		{#if !onlyName}<p class="facts">{facts}</p>{/if}
+		<p class="facts">
+			Laga{data.dayName ? ` · ${data.dayName}` : ''}{#if !onlyName}{` · ${facts}`}{/if}
+		</p>
+		{#if canWake}
+			<button
+				type="button"
+				class={['kh-btn kh-btn--compact', !awake && 'kh-btn--secondary']}
+				aria-pressed={awake}
+				onclick={() => (awake = !awake)}
+			>
+				<Icon name="awake" />{awake ? 'Skärmen hålls tänd' : 'Håll skärmen tänd'}
+			</button>
+		{/if}
 	</div>
 
 	{#if onlyName}
@@ -207,29 +212,29 @@
 	{/if}
 
 	{#if lines.length}
-		<section class="card portions">
+		<section class="kh-card portions">
 			<p>
 				<strong>{plural(portions, 'portion', 'portioner')}</strong>
 				<span>{why} Mängderna räknas om. Ändras bara den här gången.</span>
 			</p>
 			<div class="stepper">
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-				<m3e-icon-button
-					variant="tonal"
+				<button
+					type="button"
+					class="kh-icon-btn kh-icon-btn--tonal"
 					aria-label="Färre portioner"
-					disabled={portions <= 1 || undefined}
+					disabled={portions <= 1}
 					onclick={() => (chosen = Math.max(1, portions - 1))}
 				>
 					<Icon name="remove" />
-				</m3e-icon-button>
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-				<m3e-icon-button
-					variant="tonal"
+				</button>
+				<button
+					type="button"
+					class="kh-icon-btn kh-icon-btn--tonal"
 					aria-label="Fler portioner"
 					onclick={() => (chosen = portions + 1)}
 				>
 					<Icon name="add" />
-				</m3e-icon-button>
+				</button>
 			</div>
 		</section>
 
@@ -242,6 +247,7 @@
 				{#each lines as line, i (i)}
 					{@const have = ticks.have.includes(i)}
 					<li class:have>
+						<!-- m3e's checkbox until web-ui has the check row (#174). -->
 						<!-- svelte-ignore a11y_label_has_associated_control (m3e-checkbox is the control; a tap anywhere on the row ticks it) -->
 						<label>
 							<m3e-checkbox
@@ -274,16 +280,13 @@
 								<span class="text">{step.text}</span>
 							</button>
 							{#if time && !timers.some((t) => t.step === i)}
-								<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-								<m3e-button
-									class="start"
-									variant={i === current ? 'filled' : 'tonal'}
-									size="small"
+								<button
+									type="button"
+									class={['kh-btn kh-btn--compact start', i !== current && 'kh-btn--secondary']}
 									onclick={() => startTimer(i, time)}
 								>
-									<span slot="icon" class="slot-icon"><Icon name="timer" /></span>Starta {time}
-									min
-								</m3e-button>
+									<Icon name="timer" />Starta {time} min
+								</button>
 							{/if}
 						</li>
 					{:else}
@@ -310,11 +313,11 @@
 				{#if timer.rung}<span class="visually-hidden" role="alert"
 						>Timern för steg {timer.number} är klar</span
 					>{/if}
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-				<m3e-button
-					variant="tonal"
+				<button
+					type="button"
+					class="kh-btn kh-btn--secondary kh-btn--compact"
 					aria-label="{timer.rung ? 'Stäng' : 'Stoppa'} timern för steg {timer.number}"
-					onclick={() => stopTimer(timer.id)}>{timer.rung ? 'Stäng' : 'Stoppa'}</m3e-button
+					onclick={() => stopTimer(timer.id)}>{timer.rung ? 'Stäng' : 'Stoppa'}</button
 				>
 			</div>
 		{/each}
@@ -322,22 +325,11 @@
 {/if}
 
 <style>
-	header {
-		max-width: 40rem;
-		margin: 0 auto;
-		padding: 0.5rem 0.75rem 0 0.5rem;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
 	main {
-		max-width: 40rem;
-		margin: 0 auto;
-		padding: 0.25rem 1rem 1.5rem;
+		padding-block: var(--kh-space-xs) var(--kh-space-xl);
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: var(--kh-space-m);
 	}
 
 	/* Room for the timers, which float over the end of the page. */
@@ -346,32 +338,20 @@
 	}
 
 	.title {
-		margin: 0 0.25rem;
+		margin: 0 var(--kh-space-xs);
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.title p {
-		margin: 0;
-	}
-
-	h1 {
-		margin: 0;
-		font-size: 1.875rem;
-		line-height: 2.25rem;
-		font-weight: 800;
-		letter-spacing: -0.02em;
-		overflow-wrap: anywhere;
+		align-items: flex-start;
+		gap: var(--kh-space-s);
 	}
 
 	.facts {
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
+		margin: 0;
+		font: var(--kh-type-item-subtitle);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.portions {
-		padding: 0.75rem 0.875rem 0.75rem 1.125rem;
 		flex-direction: row;
 		align-items: center;
 		justify-content: space-between;
@@ -391,7 +371,7 @@
 	.portions span {
 		font-size: 0.8125rem;
 		line-height: 1.125rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.stepper {
@@ -417,7 +397,7 @@
 	}
 
 	.have label {
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 		text-decoration: line-through;
 	}
 
@@ -460,7 +440,7 @@
 	}
 
 	.steps button:focus-visible {
-		outline: 2px solid var(--md-sys-color-primary);
+		outline: 2px solid var(--kh-primary);
 		outline-offset: -2px;
 	}
 
@@ -473,8 +453,8 @@
 		height: 2rem;
 		flex-shrink: 0;
 		border-radius: 1rem;
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
+		background: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
 		font-size: 0.9375rem;
 		font-weight: 700;
 		display: grid;
@@ -488,7 +468,7 @@
 
 	.current {
 		padding-bottom: 0.75rem;
-		background: var(--md-sys-color-primary-container);
+		background: var(--kh-primary-container);
 	}
 
 	.current button {
@@ -498,17 +478,17 @@
 	}
 
 	.current .number {
-		background: var(--md-sys-color-primary);
-		color: var(--md-sys-color-on-primary);
+		background: var(--kh-primary);
+		color: var(--kh-on-primary);
 	}
 
 	.done button {
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.done .number {
-		background: var(--app-fill);
-		color: var(--md-sys-color-on-surface-variant);
+		background: var(--kh-row-tint);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.start {
@@ -544,8 +524,8 @@
 		padding: 0 0.5rem 0 1.25rem;
 		box-sizing: border-box;
 		border-radius: 2rem;
-		background: var(--md-sys-color-inverse-surface);
-		color: var(--md-sys-color-inverse-on-surface);
+		background: var(--kh-inverse-surface);
+		color: var(--kh-inverse-on-surface);
 		box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
 		display: flex;
 		align-items: center;
@@ -554,7 +534,7 @@
 
 	.timer :global(svg) {
 		flex-shrink: 0;
-		color: var(--md-sys-color-inverse-primary);
+		color: var(--kh-inverse-primary);
 	}
 
 	.timer p {
@@ -575,8 +555,8 @@
 	}
 
 	.rung {
-		background: var(--md-sys-color-primary);
-		color: var(--md-sys-color-on-primary);
+		background: var(--kh-primary);
+		color: var(--kh-on-primary);
 	}
 
 	.rung :global(svg) {
