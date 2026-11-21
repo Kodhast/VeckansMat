@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.17.0
+
+- Handla har Kodhästs kryssrad, svep, knappar, kort och meddelanden, som i Android-apparna (#174): en vara kryssas med den runda kryssrutan, sveps åt vänster för att tas bort och kommer tillbaka med Ångra. Raden för en ny vara och butiksväljaren i Inställningar har Kodhästs fält och ark.
+
 ## 0.16.0
 
 - Kryssen för ingredienserna i Laga och reglaget Passar till matlådor i en rätt är Kodhästs kryssrad och reglage, som i Android-apparna (#174). En ikryssad ingrediens stryks över, som förut.

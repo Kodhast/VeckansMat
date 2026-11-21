@@ -21,7 +21,7 @@ test('the week shopping list is made from the dishes and ticked off in the store
 
 	await open(page, '/handla');
 	await expect(page.getByText('1 rätt har bara namn')).toBeVisible();
-	await page.locator('m3e-button', { hasText: 'Gör inköpslistan' }).click();
+	await page.getByRole('button', { name: 'Gör inköpslistan' }).click();
 
 	// Claude's list, under the store's sections in their order, with what is likely at home last.
 	await expect(page.getByRole('heading', { level: 2 })).toHaveText([
@@ -53,7 +53,7 @@ test('the week shopping list is made from the dishes and ticked off in the store
 
 	// Undo takes it out of the basket again.
 	await page.getByRole('checkbox', { name: 'Salt' }).click();
-	await page.locator('m3e-snackbar').getByRole('button', { name: 'Ångra' }).click();
+	await page.locator('.kh-snackbar').getByRole('button', { name: 'Ångra' }).click();
 	await expect(page.getByRole('checkbox', { name: 'Salt' })).not.toBeChecked();
 
 	// Items written by hand, two in a row from the add button, stay when the list is made again.
@@ -69,7 +69,7 @@ test('the week shopping list is made from the dishes and ticked off in the store
 	await expect(field).toHaveCount(0);
 	await saved(page);
 	expect(loads()).toBe(0);
-	await page.locator('m3e-icon-button[aria-label="Gör om listan från veckan"]').click();
+	await page.getByRole('button', { name: 'Gör om listan från veckan' }).click();
 	await expect(page.getByRole('checkbox', { name: 'Kaffe' })).toBeVisible();
 	await expect(page.getByRole('checkbox', { name: 'Gul lök' })).toBeChecked();
 	// Without swiping, as from the keyboard, an item without dishes is removed with its button.
@@ -78,11 +78,14 @@ test('the week shopping list is made from the dishes and ticked off in the store
 	await expect(page.getByRole('checkbox', { name: 'Te' })).toHaveCount(0);
 });
 
-/** Swipes the row of an item to the left with a finger, over `share` of its width. */
-async function swipe(page: Page, text: string, share: number) {
+/**
+ * Swipes the row of an item to the left with a finger, over `share` of its width; `pause` between
+ * the moves makes it slow, since a quick flick takes the row away however short it is.
+ */
+async function swipe(page: Page, text: string, share: number, pause = 0) {
 	const row = page.locator('li', { has: page.getByRole('checkbox', { name: text }) });
 	const box = (await row.boundingBox())!;
-	await swipeAt(page, box.x + box.width - 90, box.y + box.height / 2, -box.width * share);
+	await swipeAt(page, box.x + box.width - 90, box.y + box.height / 2, -box.width * share, 0, pause);
 }
 
 test('any item is swiped away, and undo puts it back with its dishes', async ({ page }) => {
@@ -90,21 +93,21 @@ test('any item is swiped away, and undo puts it back with its dishes', async ({ 
 	const item = page.getByRole('checkbox', { name: 'Till fiskgratäng' });
 	await expect(item).toBeVisible();
 
-	// A short swipe leaves it, and does not tick it either.
-	await swipe(page, 'Till fiskgratäng', 0.25);
+	// A short, slow swipe leaves it, and does not tick it either.
+	await swipe(page, 'Till fiskgratäng', 0.25, 40);
 	await expect(item).toBeVisible();
 	await expect(item).not.toBeChecked();
 	// And the next tap still ticks it.
 	await item.click();
 	await expect(item).toBeHidden();
-	await page.locator('m3e-snackbar').getByRole('button', { name: 'Ångra' }).click();
+	await page.locator('.kh-snackbar').getByRole('button', { name: 'Ångra' }).click();
 	await expect(item).toBeVisible();
 
 	// A long one takes it away, and stays on Handla rather than going to the next view (#105).
 	await swipe(page, 'Till fiskgratäng', 0.7);
 	await expect(item).toHaveCount(0);
 	await expect(page).toHaveURL(/\/handla$/);
-	await page.locator('m3e-snackbar').getByRole('button', { name: 'Ångra' }).click();
+	await page.locator('.kh-snackbar').getByRole('button', { name: 'Ångra' }).click();
 	await expect(item).toBeVisible();
 	await saved(page);
 	await reload(page);
@@ -119,8 +122,9 @@ test('any item is swiped away, and undo puts it back with its dishes', async ({ 
 	await expect(page.getByRole('checkbox', { name: 'Till fiskgratäng' })).toHaveCount(0);
 
 	// To the right a row is the page's, and goes back to Veckan (#105).
-	const row = (await page.locator('li[data-own-swipe]').first().boundingBox())!;
-	await swipeAt(page, row.x + 60, row.y + row.height / 2, 200);
+	const row = (await page.locator('kh-swipe').first().boundingBox())!;
+	// From the text, as a finger on the check ticks it rather than swiping.
+	await swipeAt(page, row.x + 100, row.y + row.height / 2, 200);
 	await expect(page).toHaveURL(/\/$/);
 });
 
@@ -152,12 +156,12 @@ test('a list made before the week changed offers to be updated', async ({ page }
 	await open(page, '/handla');
 	const changed = page.getByRole('heading', { name: 'Veckan har ändrats' });
 	await expect(changed).toBeVisible();
-	await page.locator('m3e-button', { hasText: 'Inte nu' }).click();
+	await page.getByRole('button', { name: 'Inte nu' }).click();
 	await expect(changed).toHaveCount(0);
 
 	await saved(page);
 	await reload(page);
-	await page.locator('m3e-button', { hasText: 'Uppdatera listan' }).click();
+	await page.getByRole('button', { name: 'Uppdatera listan' }).click();
 	await expect(changed).toHaveCount(0);
 	await expect(page.getByRole('checkbox', { name: 'Till linsgryta i handlaprovet' })).toBeVisible();
 });

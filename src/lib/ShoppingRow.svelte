@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Icon from './Icon.svelte';
-	import { heading } from './swipe.ts';
 
-	// An item on the shopping list: tick it off, see which dishes it is for, or swipe it away to
-	// the left.
+	// An item on the shopping list (web-ui's kh-check-row in a kh-swipe, as CheckRow and SwipeToHide
+	// in android-ui): tick it off, see which dishes it is for, or swipe it away to the left, which
+	// the snackbar can undo (android-ui #118).
 	let {
 		text,
 		amount,
@@ -23,60 +23,15 @@
 
 	const id = $props.id();
 
-	// How far the row is pulled to the left, in pixels.
-	let shift = $state(0);
-	let row: HTMLElement | undefined = $state();
-	let start: { x: number; y: number } | null = null;
-	let swiping = $state(false);
-	// A swipe ends with a click on the row, which must not tick it.
-	let swiped = false;
-
-	function down(event: PointerEvent) {
-		if (event.button !== 0) return;
-		swiped = false;
-		start = { x: event.clientX, y: event.clientY };
-	}
-
-	function move(event: PointerEvent) {
-		if (!start || !row) return;
-		const dx = event.clientX - start.x;
-		const dy = event.clientY - start.y;
-		if (!swiping) {
-			// Sideways to the left, rather than a scroll, a tap or a swipe of the page to the right.
-			const way = heading(dx, dy);
-			if (way === 'sideways' && dx < 0) {
-				swiping = true;
-				row.setPointerCapture(event.pointerId);
-			} else if (way) start = null;
-			return;
-		}
-		shift = Math.min(0, dx);
-	}
-
-	function up() {
-		if (swiping && row) {
-			swiped = true;
-			if (-shift > row.offsetWidth / 2) {
-				shift = -row.offsetWidth;
-				onremove();
-			} else shift = 0;
-		}
-		start = null;
-		swiping = false;
-	}
-
-	function cancel() {
-		start = null;
-		swiping = false;
-		shift = 0;
-	}
-
-	function click(event: MouseEvent) {
-		if (!swiped) return;
-		swiped = false;
-		event.preventDefault();
-		event.stopPropagation();
-	}
+	// web-ui's kh-swipe says so when the row is swiped far enough; the row to the right is the
+	// page's (#105), which kh-swipe marks with data-own-swipe itself.
+	let swipe: HTMLElement | undefined = $state();
+	$effect(() => {
+		if (!swipe) return;
+		const removed = () => onremove();
+		swipe.addEventListener('kh-swipe', removed);
+		return () => swipe?.removeEventListener('kh-swipe', removed);
+	});
 
 	// The popup with the dishes opens under its button, in the top layer.
 	let info: HTMLElement | undefined = $state();
@@ -94,141 +49,91 @@
 	}
 </script>
 
-<!-- The row's swipe to the left is its own; to the right it swipes the page (#105). -->
-<li class="row" class:checked data-own-swipe="left">
-	{#if shift < 0}
-		<div class="behind" aria-hidden="true"><Icon name="delete" />Ta bort</div>
-	{/if}
-	<div
-		bind:this={row}
-		class="front"
-		class:swiping
-		style:transform={shift ? `translateX(${shift}px)` : undefined}
-		onpointerdown={down}
-		onpointermove={move}
-		onpointerup={up}
-		onpointercancel={cancel}
-		onclickcapture={click}
-		role="presentation"
-	>
-		<!-- svelte-ignore a11y_label_has_associated_control (m3e-checkbox is the control; a tap anywhere on the row ticks it) -->
-		<label>
-			<m3e-checkbox
-				aria-label={text}
-				checked={checked || undefined}
-				onchange={(e: Event & { currentTarget: HTMLElement & { checked: boolean } }) =>
-					oncheck(e.currentTarget.checked)}
-			></m3e-checkbox>
-			<span class="text">{text}</span>
-		</label>
-		{#if dishes}
-			<button
-				bind:this={infoButton}
-				type="button"
-				class="info"
-				aria-label="Till vilka rätter: {text}"
-				popovertarget="{id}-info"
-			>
-				<Icon name="info" />
-			</button>
-			<div bind:this={info} id="{id}-info" class="popup" popover="auto" ontoggle={place}>
-				<strong>Till</strong>
-				<span>{dishes}</span>
-				<button type="button" class="remove" aria-label="Ta bort {text}" onclick={remove}>
-					<Icon name="delete" />Ta bort
+<li>
+	<kh-swipe bind:this={swipe} label="Ta bort" tone="hide">
+		<div class={['line', checked && 'checked']}>
+			<label class="kh-row kh-check-row kh-check-row--plain">
+				<span class="kh-row__leading">
+					<input
+						type="checkbox"
+						class="kh-check"
+						aria-label={text}
+						{checked}
+						onchange={(e) => oncheck(e.currentTarget.checked)}
+					/>
+				</span>
+				<span class="kh-row__text"><span class="kh-row__title">{text}</span></span>
+			</label>
+			{#if dishes}
+				<button
+					bind:this={infoButton}
+					type="button"
+					class="kh-icon-btn info"
+					aria-label="Till vilka rätter: {text}"
+					popovertarget="{id}-info"
+				>
+					<Icon name="info" />
 				</button>
-			</div>
-		{:else}
-			<!-- Swiping is not for everyone, so the row can be removed with a button too. -->
-			<button type="button" class="remove hidden" onclick={onremove}>Ta bort {text}</button>
-			<span class="spacer"></span>
-		{/if}
-		{#if amount}<span class="amount">{amount}</span>{/if}
-	</div>
+				<div bind:this={info} id="{id}-info" class="popup" popover="auto" ontoggle={place}>
+					<strong>Till</strong>
+					<span>{dishes}</span>
+					<button type="button" class="remove" aria-label="Ta bort {text}" onclick={remove}>
+						<Icon name="delete" />Ta bort
+					</button>
+				</div>
+			{:else}
+				<!-- Swiping is not for everyone, so the row can be removed with a button too. -->
+				<button type="button" class="remove hidden" onclick={onremove}>Ta bort {text}</button>
+			{/if}
+			{#if amount}<span class="amount">{amount}</span>{/if}
+		</div>
+	</kh-swipe>
 </li>
 
 <style>
-	.row {
+	/* The row lies on the open section's tint, also while it is pulled aside. */
+	.line {
 		position: relative;
-		overflow: hidden;
-	}
-
-	.behind {
-		position: absolute;
-		inset: 0;
-		padding-right: 1.25rem;
-		background: var(--md-sys-color-error-container);
-		color: var(--md-sys-color-on-error-container);
-		font-size: 0.875rem;
-		font-weight: 500;
+		padding-right: var(--kh-space-m);
+		background-color: var(--kh-foldout-surface, var(--kh-row-tint));
 		display: flex;
 		align-items: center;
-		justify-content: flex-end;
-		gap: 0.5rem;
 	}
 
-	.behind :global(svg) {
-		width: 1.25rem;
-	}
-
-	.front {
-		position: relative;
-		min-height: 2.875rem;
-		padding: 0 0.75rem 0 0.375rem;
-		background: var(--app-card);
-		display: flex;
-		align-items: center;
-		/* Up and down still scroll the page; sideways is the row's own. */
-		touch-action: pan-y;
-		transition: transform 200ms;
-	}
-
-	.front.swiping {
-		transition: none;
-	}
-
-	label {
+	.kh-check-row {
 		flex: 1;
 		min-width: 0;
-		display: flex;
-		align-items: center;
-		gap: 0.125rem;
-		cursor: pointer;
+		padding-right: 0;
 	}
 
-	.text {
-		flex: 1;
-		min-width: 0;
-		font-size: 1rem;
-		line-height: 1.375rem;
-	}
-
-	.checked .text,
-	.checked .amount {
-		color: var(--md-sys-color-on-surface-variant);
+	.checked :is(.kh-row__title, .amount) {
+		color: var(--kh-on-surface-variant);
 		text-decoration: line-through;
 	}
 
 	.info {
-		width: 2.5rem;
-		height: 2.5rem;
 		flex-shrink: 0;
-		padding: 0;
-		border: 0;
-		border-radius: 50%;
-		background: transparent;
-		color: var(--md-sys-color-on-surface-variant);
-		display: grid;
-		place-items: center;
-		cursor: pointer;
+		color: var(--kh-on-surface-variant);
 	}
 
 	.info :global(svg) {
 		width: 1.125rem;
 	}
 
-	.info:focus-visible {
-		outline: 2px solid var(--md-sys-color-primary);
+	.amount {
+		min-width: 4rem;
+		padding-left: var(--kh-space-s);
+		text-align: right;
+		font: var(--kh-type-item-subtitle);
+		font-weight: 500;
+		color: var(--kh-on-surface-variant);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	/* No info button: the amount stands where it would, as the rows' amounts line up. */
+	.hidden + .amount {
+		margin-left: 48px;
 	}
 
 	.popup {
@@ -238,12 +143,11 @@
 		margin: 0;
 		padding: 0.625rem 0.875rem;
 		border: 0;
-		border-radius: 0.75rem;
-		background: var(--md-sys-color-inverse-surface);
-		color: var(--md-sys-color-inverse-on-surface);
-		box-shadow: 0 6px 18px rgb(40 20 10 / 0.25);
-		font-size: 0.8125rem;
-		line-height: 1.45;
+		border-radius: var(--kh-radius-row);
+		background: var(--kh-inverse-surface);
+		color: var(--kh-inverse-on-surface);
+		box-shadow: 0 6px 18px color-mix(in srgb, var(--kh-scrim) 25%, transparent);
+		font: var(--kh-type-item-subtitle);
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 0.125rem;
@@ -254,8 +158,8 @@
 	}
 
 	.popup strong {
-		font-size: 0.6875rem;
-		letter-spacing: 0.08em;
+		font: var(--kh-type-caption);
+		letter-spacing: var(--kh-tracking-caption);
 		text-transform: uppercase;
 		opacity: 0.8;
 	}
@@ -265,9 +169,8 @@
 		padding: 0.25rem;
 		border: 0;
 		background: transparent;
-		color: var(--md-sys-color-inverse-primary);
-		font: inherit;
-		font-weight: 500;
+		color: var(--kh-inverse-primary);
+		font: var(--kh-type-button);
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
@@ -278,37 +181,20 @@
 		width: 1rem;
 	}
 
-	/* Out of sight until it has the focus, as from the keyboard or a screen reader. */
+	/* Out of sight until it has the focus, as from the keyboard. */
 	.remove.hidden {
 		position: absolute;
 		right: 0.5rem;
 		padding: 0.5rem 0.75rem;
 		border: 0;
 		border-radius: 1rem;
-		background: var(--md-sys-color-error-container);
-		color: var(--md-sys-color-on-error-container);
-		font: inherit;
-		font-size: 0.875rem;
+		background: var(--kh-error-container);
+		color: var(--kh-on-error-container);
+		font: var(--kh-type-button);
 		clip-path: inset(50%);
 	}
 
 	.remove.hidden:focus {
 		clip-path: none;
-	}
-
-	.spacer {
-		width: 2.5rem;
-		flex-shrink: 0;
-	}
-
-	.amount {
-		min-width: 4rem;
-		padding-left: 0.5rem;
-		text-align: right;
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--md-sys-color-on-surface-variant);
-		font-variant-numeric: tabular-nums;
-		white-space: nowrap;
 	}
 </style>

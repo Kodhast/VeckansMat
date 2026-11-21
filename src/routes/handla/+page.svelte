@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { M3eSnackbarElement } from '@m3e/web/snackbar';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { postAction, type Fields } from '#lib/actions.ts';
@@ -8,6 +7,7 @@
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
 	import ShoppingRow from '#lib/ShoppingRow.svelte';
+	import Snackbar from '#lib/Snackbar.svelte';
 	import WeekHeader from '#lib/WeekHeader.svelte';
 	import type { RemovedItem, ShoppingItem } from '#lib/server/db/shopping.ts';
 	import { plural } from '#lib/names.ts';
@@ -158,18 +158,18 @@
 		}
 	}
 
-	function undoRemove(event: ToggleEvent & { currentTarget: M3eSnackbarElement }) {
-		if (event.newState !== 'closed' || !removed) return;
+	function undoRemove(actionTaken: boolean) {
+		if (!removed) return;
 		const item = removed;
 		removed = null;
-		if (event.currentTarget.isActionTaken) post('restore', { item: JSON.stringify(item) });
+		if (actionTaken) post('restore', { item: JSON.stringify(item) });
 	}
 
-	function undoCheck(event: ToggleEvent & { currentTarget: M3eSnackbarElement }) {
-		if (event.newState !== 'closed' || !basketed) return;
+	function undoCheck(actionTaken: boolean) {
+		if (!basketed) return;
 		const item = basketed;
 		basketed = null;
-		if (event.currentTarget.isActionTaken) check(item, false);
+		if (actionTaken) check(item, false);
 	}
 </script>
 
@@ -196,14 +196,15 @@
 >
 	{#snippet actions()}
 		{#if !isEmpty}
-			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-			<m3e-icon-button
+			<button
+				type="button"
+				class="kh-icon-btn"
 				aria-label="Gör om listan från veckan"
-				disabled={making || undefined}
+				disabled={making}
 				onclick={make}
 			>
 				<Icon name="refresh" />
-			</m3e-icon-button>
+			</button>
 		{/if}
 	{/snippet}
 </WeekHeader>
@@ -232,39 +233,41 @@
 	{#if making}
 		<!-- No notice while the list is being made. -->
 	{:else if listError}
-		<section class="card notice">
+		<section class="kh-card notice">
 			<p>
 				{listError === 'limit'
 					? 'Appen har använt Claude så mycket som månadens tak tillåter'
 					: 'Claude kunde inte göra listan just nu'}, så här står ingredienserna rätt för rätt som
 				de står i recepten.
 			</p>
-			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-			<m3e-button variant="outlined" onclick={make}>Försök igen</m3e-button>
+			<button type="button" class="kh-btn kh-btn--outlined kh-btn--compact" onclick={make}
+				>Försök igen</button
+			>
 		</section>
 	{:else if data.changed && notNow[data.weekStart] !== data.basis}
-		<section class="card notice changed">
+		<section class="kh-card kh-card--tone notice changed">
 			<h2>Veckan har ändrats</h2>
 			<p>Det du skrivit själv och det som ligger i korgen står kvar när listan uppdateras.</p>
 			<div class="buttons">
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-				<m3e-button variant="filled" onclick={make}>Uppdatera listan</m3e-button>
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-				<m3e-button variant="text" onclick={() => (notNow[data.weekStart] = data.basis)}
-					>Inte nu</m3e-button
+				<button type="button" class="kh-btn kh-btn--compact" onclick={make}>Uppdatera listan</button
+				>
+				<button
+					type="button"
+					class="kh-btn kh-btn--text kh-btn--compact"
+					onclick={() => (notNow[data.weekStart] = data.basis)}>Inte nu</button
 				>
 			</div>
 		</section>
 	{/if}
 
 	{#if making}
-		<div class="card making">
-			<m3e-loading-indicator></m3e-loading-indicator>
+		<div class="kh-card making">
+			<div class="kh-loading"><kh-dots bouncing></kh-dots></div>
 			<p role="status">Claude gör listan …</p>
 			<p class="hint">Räknar om till veckans portioner och slår ihop det som behövs.</p>
 		</div>
 	{:else if isEmpty}
-		<section class="card empty">
+		<section class="kh-card empty">
 			{#if data.dishes.length === 0}
 				<h2>Veckan har inga rätter än</h2>
 				<p class="hint">Skriv in veckan först, så blir listan av rätternas ingredienser.</p>
@@ -282,10 +285,9 @@
 						behövas och skriver in det i rätten.
 					{/if}
 				</p>
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-				<m3e-button variant="filled" onclick={make}>
-					<span slot="icon" class="slot-icon"><Icon name="suggest" /></span>Gör inköpslistan
-				</m3e-button>
+				<button type="button" class="kh-btn" onclick={make}>
+					<Icon name="suggest" />Gör inköpslistan
+				</button>
 			{/if}
 		</section>
 	{:else}
@@ -345,16 +347,12 @@
 
 {#key basketed}
 	{#if basketed}
-		<m3e-snackbar action="Ångra" duration="6000" open ontoggle={undoCheck}>
-			{basketed.text} i korgen
-		</m3e-snackbar>
+		<Snackbar text="{basketed.text} i korgen" action="Ångra" onclose={undoCheck} />
 	{/if}
 {/key}
 {#key removed}
 	{#if removed}
-		<m3e-snackbar action="Ångra" duration="6000" open ontoggle={undoRemove}>
-			{removed.text} togs bort
-		</m3e-snackbar>
+		<Snackbar text="{removed.text} togs bort" action="Ångra" onclose={undoRemove} />
 	{/if}
 {/key}
 
@@ -365,7 +363,7 @@
 		align-items: center;
 		gap: 0.625rem;
 		font-size: 0.8125rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.progress svg {
@@ -379,11 +377,11 @@
 	}
 
 	.wave {
-		stroke: var(--md-sys-color-primary);
+		stroke: var(--kh-primary);
 	}
 
 	.track {
-		stroke: var(--md-sys-color-primary-container);
+		stroke: var(--kh-primary-container);
 	}
 
 	ul {
@@ -392,26 +390,28 @@
 		list-style: none;
 	}
 
+	/* Where the item's text will stand once it is saved, beside where its check will be. */
 	.pending {
-		min-height: 2.875rem;
-		padding-left: 3.25rem;
+		min-height: 56px;
+		padding-left: calc(var(--kh-space-m) * 2 + 48px);
 		display: flex;
 		align-items: center;
-		color: var(--md-sys-color-on-surface-variant);
+		font: var(--kh-type-item-title);
+		color: var(--kh-on-surface-variant);
 	}
 
-	.card h2 {
+	.kh-card h2 {
 		margin: 0;
 		font-size: 1rem;
 	}
 
-	.empty m3e-button,
+	.empty .kh-btn,
 	.empty a {
 		align-self: flex-start;
 	}
 
 	a {
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 		font-weight: 500;
 	}
 
@@ -439,9 +439,11 @@
 	}
 
 	.notice.changed {
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
-		box-shadow: none;
+		color: var(--kh-on-primary-container);
+	}
+
+	.notice.changed .kh-btn--text {
+		color: inherit;
 	}
 
 	.buttons {
