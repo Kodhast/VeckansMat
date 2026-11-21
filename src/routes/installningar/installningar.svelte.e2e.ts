@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { open, reload, saved } from '../../../test/e2e';
+import { fromAccountMenu, open, reload, saved } from '../../../test/e2e';
 
 // Made-up people only. The tests share one database, so they run in order.
 test.describe.configure({ mode: 'serial' });
 
 test('a person is added with what they do not eat, changed and removed', async ({ page }) => {
 	await open(page, '/');
-	await page.getByRole('link', { name: /^Konto och inställningar/ }).click();
+	await fromAccountMenu(page, 'Inställningar');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inställningar');
 	await expect(page.locator('m3e-list-action', { hasText: 'Kim' })).toHaveCount(0);
 
@@ -94,7 +94,7 @@ test('how often the same dish may come is saved as it is changed', async ({ page
 test('chains and a store are chosen for the offers, and fetched at once', async ({ page }) => {
 	// Reached from Veckan, as the app's components are then already there (#116).
 	await open(page, '/');
-	await page.getByRole('link', { name: /^Konto och inställningar/ }).click();
+	await fromAccountMenu(page, 'Inställningar');
 
 	const lidl = page.getByRole('region', { name: 'Lidl' });
 	await lidl.getByRole('switch', { name: 'Lidl' }).click();

@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { postAction, type Fields } from '#lib/actions.ts';
 	import AddItemSheet from '#lib/AddItemSheet.svelte';
-	import { useFab } from '#lib/fab.svelte.ts';
+	import { useToolbarAction } from '#lib/toolbar.svelte.ts';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
 	import ShoppingRow from '#lib/ShoppingRow.svelte';
@@ -31,7 +31,7 @@
 	// Items written in but not yet saved, per week.
 	let adding = $state<Record<string, string[]>>({});
 	let addOpen = $state(false);
-	useFab(plus);
+	useToolbarAction({ label: 'Lägg till en vara', onclick: () => (addOpen = true) });
 	// Per week, so that the other week shows its own list meanwhile.
 	let makingWeeks = $state<Record<string, boolean>>({});
 	let making = $derived(!!makingWeeks[data.weekStart]);
@@ -188,10 +188,13 @@
 	/>
 {/snippet}
 
-<main class="page warm-view">
-	<WeekHeader weekStart={data.weekStart} thisWeek={data.thisWeek} nextWeek={data.nextWeek} />
-	<div class="title">
-		<h1 class="view-title">Handla</h1>
+<WeekHeader
+	title="Handla"
+	weekStart={data.weekStart}
+	thisWeek={data.thisWeek}
+	nextWeek={data.nextWeek}
+>
+	{#snippet actions()}
 		{#if !isEmpty}
 			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
 			<m3e-icon-button
@@ -202,7 +205,10 @@
 				<Icon name="refresh" />
 			</m3e-icon-button>
 		{/if}
-	</div>
+	{/snippet}
+</WeekHeader>
+
+<main class="page warm-view">
 	{#if toBuy.length || basket.length}
 		<div class="progress">
 			<svg
@@ -335,13 +341,6 @@
 	{/if}
 </main>
 
-{#snippet plus()}
-	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-fab is a button with its own keyboard handling) -->
-	<m3e-fab variant="primary" aria-label="Lägg till en vara" onclick={() => (addOpen = true)}>
-		<Icon name="add" />
-	</m3e-fab>
-{/snippet}
-
 <AddItemSheet bind:open={addOpen} onadd={add} />
 
 {#key basketed}
@@ -360,13 +359,6 @@
 {/key}
 
 <style>
-	.title {
-		margin: 0 -0.5rem 0 0.25rem;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
 	.progress {
 		margin: -0.5rem 0 0.25rem 0.25rem;
 		display: flex;

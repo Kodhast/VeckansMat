@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { open } from '../../test/e2e';
+import { accountButton as account, fromAccountMenu, open } from '../../test/e2e';
 
 // Made-up accounts. Access sends the email in a header, and the browser asks its identity endpoint
 // for the name and picture, which the test answers. The picture comes from the made-up site in
@@ -24,8 +24,6 @@ async function identity(page: Page, body: object | null) {
 	return () => asked;
 }
 
-const account = (page: Page) => page.getByRole('link', { name: /^Konto och inställningar/ });
-
 test.describe('with a Google picture', () => {
 	test.use(as(ALEX));
 
@@ -38,7 +36,7 @@ test.describe('with a Google picture', () => {
 		// The first load shows the letter, and the picture once the browser has fetched it.
 		await open(page, '/');
 		await expect(account(page).locator('img')).toBeVisible();
-		await expect(account(page)).toHaveAccessibleName('Konto och inställningar, Alex Exempel');
+		await expect(account(page)).toHaveAccessibleName('Konto, Alex Exempel');
 		// The <img> has a fixed size and is visible before the picture has loaded, so wait for it.
 		await expect
 			.poll(() =>
@@ -55,7 +53,16 @@ test.describe('with a Google picture', () => {
 		// Kept for a week, so it is not asked for again.
 		expect(asked()).toBe(1);
 
+		// The menu under the picture names the account and logs out through Access.
 		await account(page).click();
+		const menu = page.getByRole('menu', { name: 'Konto' });
+		await expect(menu).toContainText('Alex Exempel');
+		await expect(menu).toContainText(ALEX);
+		await expect(menu.getByRole('menuitem', { name: 'Logga ut' })).toHaveAttribute(
+			'href',
+			'/cdn-cgi/access/logout'
+		);
+		await menu.getByRole('menuitem', { name: 'Inställningar' }).click();
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inställningar');
 		const card = page.getByRole('region', { name: 'Konto' });
 		await expect(card.locator('img')).toBeVisible();
@@ -74,7 +81,7 @@ test.describe('without a Google picture', () => {
 	test('the first letter of the name is shown', async ({ page }) => {
 		const asked = await identity(page, { email: SAM, name: 'Sam Exempel' });
 		await open(page, '/ratter');
-		await expect(account(page)).toHaveAccessibleName('Konto och inställningar, Sam Exempel');
+		await expect(account(page)).toHaveAccessibleName('Konto, Sam Exempel');
 		await expect(account(page)).toHaveText('S');
 		await expect(account(page).locator('img')).toHaveCount(0);
 		// Asked again later for a picture, but not again within ten minutes.
@@ -92,14 +99,19 @@ test.describe('when Access does not answer', () => {
 		await open(page, '/handla');
 		await expect.poll(asked).toBe(1);
 		await expect(account(page)).toHaveText('N');
-		await expect(account(page)).toHaveAccessibleName('Konto och inställningar');
+		await expect(account(page)).toHaveAccessibleName('Konto');
 	});
 });
 
-test('without Access the button still leads to Inställningar', async ({ page }) => {
+test('without Access the menu still leads to Inställningar, and has no Logga ut', async ({
+	page
+}) => {
 	await open(page, '/veckor');
-	await expect(account(page)).toHaveAccessibleName('Konto och inställningar');
+	await expect(account(page)).toHaveAccessibleName('Konto');
 	await account(page).click();
+	await expect(page.getByRole('menuitem', { name: 'Logga ut' })).toHaveCount(0);
+	await page.keyboard.press('Escape');
+	await fromAccountMenu(page, 'Inställningar');
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inställningar');
 	await expect(page.getByRole('region', { name: 'Konto' })).toHaveCount(0);
 });

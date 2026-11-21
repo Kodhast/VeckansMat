@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import AccountButton from '#lib/AccountButton.svelte';
+	import AppHeader from '#lib/AppHeader.svelte';
 	import EmptyNote from '#lib/EmptyNote.svelte';
 	import { MEAL_LABELS } from '#lib/recipes.ts';
 	import { WEEKDAYS, weekDates, weekName } from '#lib/weeks.ts';
@@ -33,13 +33,9 @@
 	<title>Veckor – Veckans mat</title>
 </svelte:head>
 
-<main>
-	<div class="view-top">
-		<p class="view-label">{data.menus.length} veckor</p>
-		<AccountButton />
-	</div>
-	<h1 class="view-title">Veckor</h1>
+<AppHeader title="Veckor" subtitle="{data.menus.length} veckor" />
 
+<main>
 	{#if data.menus.length === 0}
 		<EmptyNote>Inga veckor än. När ni har planerat en vecka hamnar den här.</EmptyNote>
 	{:else}
@@ -84,11 +80,6 @@
 		max-width: 40rem;
 		margin: 0 auto;
 		padding: 1rem;
-	}
-
-	h1 {
-		margin: 0 0.25rem 1rem;
-		color: var(--md-sys-color-on-surface);
 	}
 
 	.header {

@@ -375,22 +375,22 @@
 	{/if}
 {/snippet}
 
-<main class="page warm-view">
-	<WeekHeader weekStart={week.weekStart} thisWeek={data.thisWeek} nextWeek={data.nextWeek}>
-		{#snippet actions()}
-			{#if hasSuggestion}
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
-				<m3e-icon-button
-					aria-label="Nytt förslag på hela veckan"
-					disabled={busy || undefined}
-					onclick={askSuggest}
-				>
-					<Icon name="suggest" />
-				</m3e-icon-button>
-			{/if}
-		{/snippet}
-	</WeekHeader>
+<WeekHeader weekStart={week.weekStart} thisWeek={data.thisWeek} nextWeek={data.nextWeek}>
+	{#snippet actions()}
+		{#if hasSuggestion}
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-icon-button is a button with its own keyboard handling) -->
+			<m3e-icon-button
+				aria-label="Nytt förslag på hela veckan"
+				disabled={busy || undefined}
+				onclick={askSuggest}
+			>
+				<Icon name="suggest" />
+			</m3e-icon-button>
+		{/if}
+	{/snippet}
+</WeekHeader>
 
+<main class="page warm-view">
 	{#if !hasSuggestion && !suggesting}
 		<section class="card">
 			<m3e-form-field variant="filled">

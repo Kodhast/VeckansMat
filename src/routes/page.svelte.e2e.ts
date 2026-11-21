@@ -1,14 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { open } from '../../test/e2e';
+import { fromAccountMenu, open } from '../../test/e2e';
 import pkg from '../../package.json' with { type: 'json' };
 
 test('start page shows the week', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.getByRole('heading', { level: 1 })).toHaveText('Veckans meny');
-	// The week number gets a line of its own.
-	expect(await page.locator('.week-label').innerText()).toMatch(
-		/^Vecka \d+\n(den här veckan|nästa vecka)$/i
-	);
+	// The week is the header's title, and which week it is the line under it.
+	await expect(page.getByRole('heading', { level: 1 })).toHaveText(/^Vecka \d+$/);
+	await expect(page.locator('.kh-header__subtitle')).toHaveText(/^(Den här veckan|Nästa vecka)$/);
+	await expect(page.getByRole('heading', { level: 2, name: 'Veckans meny' })).toBeVisible();
 });
 
 test('material components are registered in the browser', async ({ page }) => {
@@ -22,18 +21,31 @@ test('health endpoint answers', async ({ request }) => {
 	expect(await response.json()).toEqual({ status: 'ok', version: pkg.version, database: 'ok' });
 });
 
-test('start page shows the version', async ({ page }) => {
-	await page.goto('/');
-	await expect(page.getByText(`Version ${pkg.version}`)).toBeVisible();
+test('the header shows the version after the name', async ({ page }) => {
+	await open(page, '/');
+	await expect(page.locator('.kh-header__name')).toHaveText('Veckans mat');
+	await expect(page.locator('.kh-header__version')).toHaveText(pkg.version);
+	await expect(page.locator('.kh-header__version')).toBeVisible();
 });
 
-test('the footer signs the app as a Kodhäst app under the version', async ({ page }) => {
-	await page.goto('/');
-	const footer = page.locator('footer');
-	await expect(footer).toContainText(`Version ${pkg.version}`);
-	await expect(footer).toContainText('En kodhäst-app');
+test('Om appen has the version and signs the app as a Kodhäst app', async ({ page }) => {
+	await open(page, '/');
+	await fromAccountMenu(page, 'Om appen');
+	await expect(page).toHaveURL('/om');
+	const main = page.getByRole('main');
+	await expect(main).toContainText(`Version ${pkg.version}`);
+	await expect(main).toContainText('En kodhäst-app');
 	// The mark is decoration; the line reads as its text alone.
-	await expect(footer.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+	await expect(main.locator('.signature svg')).toHaveAttribute('aria-hidden', 'true');
+	await page.getByRole('link', { name: 'Tillbaka' }).click();
+	await expect(page).toHaveURL('/');
+});
+
+test('the toolbar has no plus button where the view has no main action', async ({ page }) => {
+	await open(page, '/veckor');
+	await expect(page.locator('.kh-toolbar__action')).toHaveCount(0);
+	await open(page, '/handla');
+	await expect(page.locator('.kh-toolbar__action')).toHaveCount(1);
 });
 
 test('section headings have the two dots and keep their names', async ({ page }) => {
