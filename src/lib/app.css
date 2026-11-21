@@ -17,14 +17,14 @@ h2:not(:has(> button), .kh-dialog__title, .kh-sheet__title)::before {
 	margin-right: 0.875em;
 	border-radius: 50%;
 	vertical-align: 0.15em;
-	background: var(--md-sys-color-primary);
-	box-shadow: 0.5em 0 0 var(--md-sys-color-primary);
+	background: var(--kh-primary);
+	box-shadow: 0.5em 0 0 var(--kh-primary);
 }
 
 /* A second line under a row's text. */
 .meta {
 	font-size: 0.8125rem;
-	color: var(--md-sys-color-on-surface-variant);
+	color: var(--kh-on-surface-variant);
 }
 
 /* The column of a view about the week. */
@@ -51,14 +51,14 @@ h2:not(:has(> button), .kh-dialog__title, .kh-sheet__title)::before {
 	margin: 0;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	color: var(--md-sys-color-on-surface-variant);
+	color: var(--kh-on-surface-variant);
 }
 
 /* A small line under a form or a list. */
 .note {
 	margin: 0 0.25rem;
 	font-size: 0.8125rem;
-	color: var(--md-sys-color-on-surface-variant);
+	color: var(--kh-on-surface-variant);
 }
 
 /* What went wrong, as a box of its own. */
@@ -66,14 +66,14 @@ h2:not(:has(> button), .kh-dialog__title, .kh-sheet__title)::before {
 	margin: 0;
 	padding: 0.75rem 1rem;
 	border-radius: 1rem;
-	background: var(--md-sys-color-error-container);
-	color: var(--md-sys-color-on-error-container);
+	background: var(--kh-error-container);
+	color: var(--kh-on-error-container);
 }
 
 /* What went wrong, as a line under a field. */
 .error-text {
 	margin: 0;
-	color: var(--md-sys-color-error);
+	color: var(--kh-error);
 }
 
 .choices {
@@ -82,14 +82,14 @@ h2:not(:has(> button), .kh-dialog__title, .kh-sheet__title)::before {
 	gap: 0.5rem;
 }
 
-/* A quick choice, smaller than an m3e chip. */
+/* A quick choice, smaller than a chip. */
 .chip {
 	min-height: 2.25rem;
 	padding: 0 0.875rem;
-	border: 1px solid var(--md-sys-color-outline);
+	border: 1px solid var(--kh-outline);
 	border-radius: 0.5rem;
 	background: transparent;
-	color: var(--md-sys-color-on-surface-variant);
+	color: var(--kh-on-surface-variant);
 	font: inherit;
 	font-size: 0.875rem;
 	font-weight: 500;
@@ -103,11 +103,7 @@ h2:not(:has(> button), .kh-dialog__title, .kh-sheet__title)::before {
 	font-weight: 700;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--md-sys-color-primary);
-}
-
-m3e-form-field {
-	width: 100%;
+	color: var(--kh-primary);
 }
 
 /* A white card on the warm background of the new look. */
@@ -122,26 +118,15 @@ m3e-form-field {
 	gap: 0.75rem;
 }
 
-/* A field in a card is filled with a warm tone and rounded all round. */
-.card m3e-form-field {
-	--m3e-form-field-container-color: var(--app-fill);
-	--m3e-form-field-container-shape: 0.875rem;
-	--m3e-form-field-outline-color: transparent;
-}
-
 /* A box that says what just happened, or what to do next. */
 .banner {
 	margin: 0;
 	padding: 0.75rem 1rem;
 	border-radius: 1.125rem;
-	background: var(--md-sys-color-primary-container);
-	color: var(--md-sys-color-on-primary-container);
+	background: var(--kh-primary-container);
+	color: var(--kh-on-primary-container);
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-}
-
-m3e-list {
-	--m3e-segmented-list-item-container-color: var(--md-sys-color-surface-container);
 }
 
 /* Read out by a screen reader, but not shown. */

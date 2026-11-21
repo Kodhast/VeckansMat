@@ -109,7 +109,7 @@
 	}
 
 	.swapped {
-		background: var(--md-sys-color-primary-container);
+		background: var(--kh-primary-container);
 	}
 
 	.main {
@@ -160,7 +160,7 @@
 		font-family: var(--menu-script);
 		font-size: 0.8125rem;
 		line-height: 1.3;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	/* The price tag, under the dish where the reason would be. */
@@ -170,8 +170,8 @@
 		padding: 0.25rem 0.625rem;
 		border: 0;
 		border-radius: 0.625rem;
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
+		background: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
 		font: inherit;
 		font-size: 0.8125rem;
 		font-weight: 500;
@@ -191,13 +191,13 @@
 	.label {
 		flex-shrink: 0;
 		font-size: 0.75rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.swap {
 		flex-shrink: 0;
 		margin-top: 0.125rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.vote {

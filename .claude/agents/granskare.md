@@ -26,7 +26,7 @@ Du granskar ändringar i VeckansMat. Du ändrar aldrig filer och kör bara läsa
 - **Beslut:** bygger diffen förbi en ADR utan en ny?
 - **Språk:** svenska identifierare eller kommentarer i koden; engelska i gränssnittet.
 - **Enkelhet:** kod, inställningar eller abstraktioner som ingen bett om; något som redan finns
-  i SvelteKit, m3e eller `src/lib`.
+  i SvelteKit, web-ui eller `src/lib`.
 - **Process:** ny GUI utan godkänd mockup under **Design** i issuet, eller utan skärmdumpar i
   PR:en (`/mockup`). Ändrade texter i gränssnittet: reglerna under "UX-texter på svenska" i
   `/ux-granskning`, ingen hel designkritik.

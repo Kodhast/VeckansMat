@@ -35,7 +35,7 @@ ADR (`/adr`), bygg inte förbi. Mockup: `/mockup`.
 - `.svelte`-filer: följ `svelte-core-bestpractices` och kör `svelte-autofixer`
   (`svelte-code-writer`), gärna via agenten `svelte-file-editor`. Workers, D1, R2 och wrangler:
   `workers-best-practices` och `wrangler`.
-- m3e-komponenter registreras i `src/lib/m3e.ts`.
+- Utseendet från `@kodhast/web-ui` (`kh-*`) och `src/lib/tema.css` (beslut 0026); egna element registreras av `@kodhast/web-ui/kh.js`.
 - **Version:** höjningen och raden i `CHANGELOG.md` står i `/release`.
 - **Commit-meddelanden** på svenska, som en rubrik utan prefix (`Beslut 0025: …`, `e2e: …`) –
   repots stil går före stommens `feat(område):`.

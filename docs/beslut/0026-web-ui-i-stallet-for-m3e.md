@@ -19,8 +19,7 @@ Saffran, i stället för färgvalen (#174).
   som m3e. Detta ersätter komponentdelen av beslut 0002; SvelteKit och TypeScript står kvar.
 - Appens tema står i `src/lib/tema.css`: färgerna (Saffran, ljust och mörkt), Roboto och
   textstorlekarna. Inga färgval i appen och ingen färgmotor.
-- Vyerna flyttas en i taget (V1–V6 i #174). Medan m3e finns kvar får dess delar web-ui:s färger
-  i layouten, och m3e tas bort helt när den sista vyn har flyttat.
+- Vyerna flyttades en i taget (V1–V6 i #174); i V6 togs `@m3e/web` bort helt.
 
 ## Följder
 

@@ -6,7 +6,7 @@ description: 'Granskar en vy, mockup eller skärmdump i VeckansMat för användb
 # UX-granskning
 
 Granskar en vy som den upplevs i telefonen. Bygger på Anthropics `design-critique` och
-`ux-copy` via `Kodhast/claude-android`, anpassad till webb, m3e och svenska. Nya vyer
+`ux-copy` via `Kodhast/claude-android`, anpassad till webb, web-ui och svenska. Nya vyer
 skapas med `/mockup`, inte här.
 
 ## Underlag
@@ -21,7 +21,7 @@ vyns kod för texter och tillstånd som inte syns, och vad användaren vill gör
    tryck. Syns det vad som går att trycka på?
 3. **Visuell hierarki.** Läsordning, betoning, luft. Står det viktigaste högst upp och störst?
 4. **Enhetlighet.** Samma element ser lika ut och betyder samma sak överallt; samma
-   m3e-komponent för samma sak.
+   web-ui-del för samma sak.
 5. **Tillgänglighet.** Kontrast i båda temana, tryckytor minst 48 px, text som går att förstora,
    etiketter på knappar med bara ikon.
 

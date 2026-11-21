@@ -64,9 +64,9 @@
 		--menu-hand: Caveat, cursive;
 		--menu-script: Kalam, cursive;
 		--menu-paper: #fefdfb;
-		--menu-rule: color-mix(in srgb, var(--md-sys-color-primary) 10%, #d9d0c9);
+		--menu-rule: color-mix(in srgb, var(--kh-primary) 10%, #d9d0c9);
 		--menu-chip: var(--app-fill);
-		--menu-empty: color-mix(in srgb, var(--md-sys-color-on-surface-variant) 70%, var(--menu-paper));
+		--menu-empty: color-mix(in srgb, var(--kh-on-surface-variant) 70%, var(--menu-paper));
 		/* A dish, shown or written, has the same size and place, so the line does not jump. */
 		--menu-dish-size: 1.1875rem;
 		--menu-line-padding: 0.5rem 0.25rem;
@@ -99,8 +99,8 @@
 
 	@media (prefers-color-scheme: dark) {
 		.menu {
-			--menu-paper: var(--md-sys-color-surface-container-low);
-			--menu-rule: color-mix(in srgb, var(--md-sys-color-primary) 8%, #463f3b);
+			--menu-paper: #1c1c1b;
+			--menu-rule: color-mix(in srgb, var(--kh-primary) 8%, #463f3b);
 			border: 1px solid #3a3330;
 			border-radius: 1.25rem;
 			box-shadow: none;
@@ -136,7 +136,7 @@
 		margin: 0;
 		font-family: var(--menu-script);
 		font-size: 0.9375rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.ornament {
@@ -158,6 +158,6 @@
 		width: 6px;
 		height: 6px;
 		transform: rotate(45deg);
-		background: var(--md-sys-color-primary);
+		background: var(--kh-primary);
 	}
 </style>

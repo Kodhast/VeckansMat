@@ -21,7 +21,7 @@ Bugg: fråga efter steg, förväntat, faktiskt, telefon och webbläsare.
 - Vilka routes, komponenter, `src/lib`-moduler och API-vägar berörs?
 - **Beslut:** vilka ADR:er i `docs/beslut/` rör området? Krockar idén med ett beslut → säg det
   och föreslå en ny ADR (`/adr`), bygg inte förbi.
-- **Återbruk:** finns det redan en komponent, funktion eller m3e-komponent som gör jobbet?
+- **Återbruk:** finns det redan en komponent, funktion eller web-ui-del som gör jobbet?
 - **Data:** ny tabell eller kolumn i D1 → migrering, och hur den provas lokalt.
 - **Claude i appen:** nytt anrop eller ändrad prompt → modell, kostnad, mock i tester, eval.
 - **Publikt repo:** behövs testdata? Den är påhittad.

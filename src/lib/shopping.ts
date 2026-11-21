@@ -53,14 +53,14 @@ export const SECTION_LOOKS: Record<Section, Look> = {
 /** The look of what is written by hand, and of a heading that is a dish rather than a section. */
 export const HAND_LOOK: Look = {
 	icon: 'edit',
-	tint: 'var(--md-sys-color-primary-container)',
-	ink: 'var(--md-sys-color-on-primary-container)',
+	tint: 'var(--kh-primary-container)',
+	ink: 'var(--kh-on-primary-container)',
 	shape: '0.625rem'
 };
 export const BASKET_LOOK: Look = {
 	icon: 'check',
 	tint: 'var(--app-fill)',
-	ink: 'var(--md-sys-color-on-surface-variant)',
+	ink: 'var(--kh-on-surface-variant)',
 	shape: '50%'
 };
 export const DISH_LOOK: Look = {

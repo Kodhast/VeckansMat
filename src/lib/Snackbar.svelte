@@ -1,6 +1,7 @@
 <script lang="ts">
 	// web-ui's snackbar (kh-snackbar, AppSnackbarHost): one line that goes by itself after a while,
-	// with an action such as Ångra. onclose says whether the action was taken.
+	// with an action such as Ångra. onclose says whether the action was taken. A duration of 0 keeps
+	// it until the action is taken.
 	let {
 		text,
 		action,
@@ -21,6 +22,7 @@
 	}
 
 	$effect(() => {
+		if (duration === 0) return;
 		const timer = setTimeout(() => close(false), duration);
 		return () => clearTimeout(timer);
 	});
