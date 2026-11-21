@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.18.2
+
+- Appen laddar mycket mindre: de gamla Material-delarna (m3e) är borttagna nu när alla vyer har Kodhästs utseende (#174). "Ny version finns" ser ut som de andra meddelandena.
+
 ## 0.18.1
 
 - Varje vara i Handla har ⓘ sist på raden, med Ta bort sist i rutan, så att en vara går att ta bort också med musen på datorn (#174). Ångra finns som förut.

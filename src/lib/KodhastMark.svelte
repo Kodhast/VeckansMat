@@ -9,8 +9,8 @@
 		points="9,59 9,34 7,28 12,22 29,22 34,11 36,2 41,9 44,9 56,16 59,23 53,28 47,24 50,36 50,59 37,59 37,45 34,42 25,42 22,45 22,59"
 		fill="currentColor"
 	/>
-	<circle cx="11.5" cy="10" r="3.6" fill="var(--md-sys-color-primary)" />
-	<circle cx="22.5" cy="10" r="3.6" fill="var(--md-sys-color-primary)" />
+	<circle cx="11.5" cy="10" r="3.6" fill="var(--kh-primary)" />
+	<circle cx="22.5" cy="10" r="3.6" fill="var(--kh-primary)" />
 </svg>
 
 <style>

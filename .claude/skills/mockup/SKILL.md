@@ -21,8 +21,8 @@ koden skrivs efter ägarens ok.
 
 ## Mallen
 
-Den första mockupen blir **mallen**: en Design-canvas med de m3e-komponenter appen använder
-(`src/lib/m3e.ts`) i ljust och mörkt tema, och vyernas tillstånd (laddar, tom, fel, innehåll).
+Den första mockupen blir **mallen**: en Design-canvas med de web-ui-delar (`kh-*`) appen använder
+i ljust och mörkt tema, och vyernas tillstånd (laddar, tom, fel, innehåll).
 Mallen: <https://claude.ai/artifact/FYM5xj2F43EWByKWP5VK2z> (privat, öppnas av ägaren). Det
 byggda är facit; mallen uppdateras när en ny komponent registreras.
 
@@ -30,12 +30,12 @@ byggda är facit; mallen uppdateras när en ny komponent registreras.
 
 1. En Design-canvas (Artifact-typen "Design") per issue, eller nya ytor i issuets canvas.
 2. Telefonyta 390 × 844; ljust tema först, mörkt när färgerna spelar roll.
-3. Bygg av element ur mallen och m3e (Material 3 Expressive). Stora tryckytor och tydlig text.
+3. Bygg av element ur mallen och web-ui (`@kodhast/web-ui`, android-ui:s utseende). Stora tryckytor och tydlig text.
 4. Riktiga svenska texter och **påhittad** data: veckodagar, rätter, ingredienser och mängder i
    svenskt format ("2 dl", "400 g"). Aldrig hushållets riktiga data.
 5. Finns elementet redan i appen → samma komponent och samma beteende; det är ingen designfråga.
    Bara för något helt nytt med en verklig öppen fråga: två ytor sida vid sida.
-6. Det som saknas i m3e och appen märks **"NY KOMPONENT"**.
+6. Det som saknas i web-ui och appen märks **"NY KOMPONENT"**.
 7. Visa de tillstånd som betyder något: tom vecka, laddar förslag, fylld vecka, fel, lång text.
 
 ## Visa och vänta

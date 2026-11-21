@@ -541,7 +541,7 @@
 		align-items: flex-start;
 		gap: 0.5rem;
 		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.offers :global(svg) {
@@ -585,7 +585,7 @@
 		font-size: 1.375rem;
 		font-weight: 700;
 		line-height: 1;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	.meals {

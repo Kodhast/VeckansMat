@@ -146,7 +146,7 @@
 		padding-bottom: 0.5rem;
 		border-radius: 0.5rem;
 		background: var(--menu-chip);
-		outline: 2px solid var(--md-sys-color-primary);
+		outline: 2px solid var(--kh-primary);
 		outline-offset: -2px;
 		display: flex;
 		flex-direction: column;
@@ -167,7 +167,7 @@
 		padding-right: 0.125rem;
 		font-size: 0.75rem;
 		line-height: calc(var(--menu-dish-size) * 1.3);
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.line input {
@@ -192,8 +192,8 @@
 	}
 
 	.line input::selection {
-		background: var(--md-sys-color-primary-container);
-		color: var(--md-sys-color-on-primary-container);
+		background: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
 	}
 
 	.meta {
@@ -206,13 +206,13 @@
 		font-size: 0.75rem;
 		font-weight: 500;
 		letter-spacing: 0.03em;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.favourite {
 		margin-left: 0.25rem;
 		vertical-align: -0.125rem;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	.suggestions {
@@ -221,11 +221,11 @@
 		list-style: none;
 		border-radius: 0.75rem;
 		overflow: hidden;
-		background: var(--md-sys-color-surface);
+		background: var(--app-surface);
 	}
 
 	.suggestions li + li {
-		border-top: 1px solid var(--md-sys-color-outline-variant);
+		border-top: 1px solid var(--kh-outline-variant);
 	}
 
 	.suggestions button {
@@ -246,6 +246,6 @@
 
 	.suggestions .new {
 		justify-content: flex-start;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 </style>

@@ -1,7 +1,7 @@
 {
 	"name": "veckansmat",
 	"private": true,
-	"version": "0.18.1",
+	"version": "0.18.2",
 	"description": "Veckomeny och inköpslista för hushållet",
 	"type": "module",
 	"engines": {
@@ -30,8 +30,7 @@
 	"dependencies": {
 		"@anthropic-ai/sdk": "^1.3.0",
 		"@cloudflare/puppeteer": "^1.4.0",
-		"@kodhast/web-ui": "github:Kodhast/web-ui#v1.13.0",
-		"@m3e/web": "^2.10.2"
+		"@kodhast/web-ui": "github:Kodhast/web-ui#v1.13.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

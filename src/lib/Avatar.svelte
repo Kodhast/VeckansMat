@@ -45,8 +45,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--md-sys-color-primary);
-		color: var(--md-sys-color-on-primary);
+		background: var(--kh-primary);
+		color: var(--kh-on-primary);
 		font-size: 0.9375rem;
 		font-weight: 600;
 	}

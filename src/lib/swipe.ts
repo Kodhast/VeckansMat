@@ -51,7 +51,7 @@ function taken(path: EventTarget[], x: number): boolean {
 	return path.some(
 		(target) =>
 			target instanceof HTMLElement &&
-			(target.matches('m3e-bottom-sheet, dialog, [popover], input, textarea') ||
+			(target.matches('dialog, [popover], input, textarea') ||
 				(target.scrollWidth > target.clientWidth &&
 					/auto|scroll/.test(getComputedStyle(target).overflowX)))
 	);
