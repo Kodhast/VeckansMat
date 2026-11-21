@@ -19,7 +19,7 @@ test('nothing more is read once the month has cost the cap', async ({ page }) =>
 
 test('no week is suggested once the month has cost the cap', async ({ page }) => {
 	await open(page, '/');
-	await page.locator('m3e-button', { hasText: 'Föreslå veckan' }).click();
+	await page.getByRole('button', { name: 'Föreslå veckan', exact: true }).click();
 	await expect(page.getByRole('alert')).toHaveText(
 		'Appen har föreslagit så mycket som månadens tak tillåter. Skriv in rätterna själv, eller vänta till nästa månad.'
 	);

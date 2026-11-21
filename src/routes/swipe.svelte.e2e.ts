@@ -62,7 +62,7 @@ test('a short drag, a scroll, the screen edge and a sheet stay on the view', asy
 	await page
 		.getByRole('button', { name: /äter$|Välj vilka som äter|Lägg till vilka som äter/ })
 		.click();
-	const sheet = page.locator('m3e-bottom-sheet#who-eats');
+	const sheet = page.getByRole('dialog', { name: 'Vilka äter?' });
 	await expect(sheet).toHaveAttribute('open');
 	const box = (await sheet.boundingBox())!;
 	await swipeAt(page, box.x + box.width - 80, box.y + 120, -200);

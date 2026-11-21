@@ -175,11 +175,7 @@ test('a list being made for one week leaves the other week alone', async ({ page
 	await expect(status).toBeVisible();
 
 	// To whichever week is not shown.
-	await page
-		.locator(
-			'm3e-icon-button:is([aria-label="Nästa vecka"], [aria-label="Den här veckan"]):not([disabled])'
-		)
-		.click();
+	await page.locator('.week-nav a.kh-icon-btn').click();
 	await expect(page).toHaveURL(/vecka=/);
 	await expect(status).toBeHidden();
 	release();

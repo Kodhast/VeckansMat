@@ -151,6 +151,12 @@
 </m3e-theme>
 
 <style>
+	/* "Ny version finns" steps aside while web-ui's snackbar, such as Ångra on Veckan, shows, and
+	   comes back after it. m3e's own snackbars close it as before (reloadOnAction). */
+	:global(body:has(.kh-snackbar) m3e-snackbar) {
+		display: none;
+	}
+
 	/* m3e-theme only colours <body> when it is the body's direct child, which
 	   SvelteKit's app.html wrapper rules out, so the app root takes the colours. */
 	:global(body) {

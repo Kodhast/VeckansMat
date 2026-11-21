@@ -7,6 +7,7 @@
 		type ChosenOffer,
 		type ShownOffer
 	} from './offers.ts';
+	import Sheet from './Sheet.svelte';
 	import { dateText } from './weeks.ts';
 
 	// Veckans erbjudanden (#110): what can be cooked from the offers that hold today, with the
@@ -78,26 +79,17 @@
 	</li>
 {/snippet}
 
-<!-- detents is a list: a text would be read letter by letter once m3e has loaded (#116). -->
-<m3e-bottom-sheet
-	modal
-	handle
-	handle-label="Stäng"
-	hideable
-	detents={['full']}
-	open={open || undefined}
-	onclosed={onclose}
->
-	<span slot="header">Veckans erbjudanden</span>
+<Sheet {open} title="Veckans erbjudanden" full {onclose}>
+	<p class="kh-sheet__subtitle">Matvaror att laga middag av, som gäller i dag.</p>
 	{#if open}
 		<div class="body">
-			<p class="supporting">Matvaror att laga middag av, som gäller i dag.</p>
 			{#if failed}
 				<p class="error-text" role="alert">Kunde inte visa erbjudandena.</p>
-				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-				<m3e-button class="retry" variant="text" onclick={load}>Försök igen</m3e-button>
+				<button type="button" class="kh-btn kh-btn--text retry" onclick={load}>Försök igen</button>
 			{:else if !offers}
-				<m3e-loading-indicator aria-label="Hämtar erbjudanden"></m3e-loading-indicator>
+				<div class="kh-loading" role="status" aria-label="Hämtar erbjudanden">
+					<kh-dots bouncing></kh-dots>
+				</div>
 			{:else if !total}
 				<p>
 					Inga erbjudanden just nu. Slå på kedjorna ni handlar hos under Inställningar, så hämtas de
@@ -105,21 +97,20 @@
 				</p>
 			{:else}
 				{#if counts.length > 1}
-					<div class="chains" role="group" aria-label="Kedja">
-						<m3e-filter-chip
-							selected={!chain || undefined}
-							onchange={(e: Event & { currentTarget: HTMLElement & { selected: boolean } }) => {
-								// All stays chosen until a chain is: tapping it again changes nothing.
-								chain = null;
-								e.currentTarget.selected = true;
-							}}>Alla {total}</m3e-filter-chip
+					<div class="kh-chips" role="group" aria-label="Kedja">
+						<!-- All stays chosen until a chain is: tapping it again changes nothing. -->
+						<button
+							type="button"
+							class="kh-chip"
+							aria-pressed={!chain}
+							onclick={() => (chain = null)}>Alla {total}</button
 						>
 						{#each counts as [key, n] (key)}
-							<m3e-filter-chip
-								selected={chain === key || undefined}
-								onchange={(e: Event & { currentTarget: HTMLElement & { selected: boolean } }) =>
-									(chain = e.currentTarget.selected ? key : null)}
-								>{chainLabel(key)} {n}</m3e-filter-chip
+							<button
+								type="button"
+								class="kh-chip"
+								aria-pressed={chain === key}
+								onclick={() => (chain = chain === key ? null : key)}>{chainLabel(key)} {n}</button
 							>
 						{/each}
 					</div>
@@ -144,50 +135,32 @@
 			{/if}
 		</div>
 	{/if}
-</m3e-bottom-sheet>
+</Sheet>
 
 <style>
-	m3e-bottom-sheet {
-		text-align: start;
-		--m3e-bottom-sheet-container-color: var(--md-sys-color-surface-container-low);
-		--m3e-bottom-sheet-header-font-weight: 700;
-	}
-
 	.body {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-		padding-bottom: 1rem;
 	}
 
 	p {
 		margin: 0;
 	}
 
-	.supporting {
-		font-size: 0.875rem;
-		color: var(--md-sys-color-on-surface-variant);
-	}
-
 	.retry {
 		align-self: flex-start;
-	}
-
-	.chains {
-		display: flex;
-		gap: 0.5rem;
-		overflow-x: auto;
 	}
 
 	h3 {
 		margin: 0.5rem 0 0;
 		font-size: 0.875rem;
 		font-weight: 700;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	h3.used {
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 
 	ul {
@@ -204,7 +177,7 @@
 	}
 
 	li + li {
-		border-top: 1px solid var(--md-sys-color-outline-variant);
+		border-top: 1px solid var(--kh-outline-variant);
 	}
 
 	.price {
@@ -215,7 +188,7 @@
 	.meta,
 	.side {
 		font-size: 0.8125rem;
-		color: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
 	.side {
@@ -224,6 +197,6 @@
 
 	.side.day {
 		font-weight: 500;
-		color: var(--md-sys-color-primary);
+		color: var(--kh-primary);
 	}
 </style>

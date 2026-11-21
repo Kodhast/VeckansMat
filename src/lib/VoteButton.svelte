@@ -19,36 +19,33 @@
 	let label = $derived(VOTES.find((v) => v.key === vote)?.label ?? 'Hur var den?');
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions (m3e-button is a button with its own keyboard handling) -->
-<m3e-button
-	class={['vote', vote ?? 'none']}
-	variant="tonal"
+<button
+	type="button"
+	class={['kh-btn kh-btn--secondary kh-btn--compact vote', vote ?? 'none']}
 	aria-label="Röst på {name}: {label}. Tryck för att ändra."
 	onclick={() => onvote(nextVote(vote))}
 >
-	<span slot="icon" class="slot-icon thumb"><Icon name="thumbUp" /></span>{label}
-</m3e-button>
+	<Icon name="thumbUp" />{label}
+</button>
 
 <style>
 	.vote {
-		--md-sys-color-secondary-container: var(--md-sys-color-surface-container-highest);
-		--md-sys-color-on-secondary-container: var(--md-sys-color-on-surface);
 		flex-shrink: 0;
 	}
 
 	.none {
-		--md-sys-color-on-secondary-container: var(--md-sys-color-on-surface-variant);
+		color: var(--kh-on-surface-variant);
 	}
 
-	.thumb :global(svg) {
+	.vote > :global(svg) {
 		transition: transform 0.25s;
 	}
 
-	.ok .thumb :global(svg) {
+	.ok > :global(svg) {
 		transform: rotate(-90deg);
 	}
 
-	.aldrig .thumb :global(svg) {
+	.aldrig > :global(svg) {
 		transform: scaleY(-1);
 	}
 </style>
