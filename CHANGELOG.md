@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.18.1
+
+- Varje vara i Handla har ⓘ sist på raden, med Ta bort sist i rutan, så att en vara går att ta bort också med musen på datorn (#174). Ångra finns som förut.
+
 ## 0.18.0
 
 - Veckor och Inställningar har Kodhästs utfällbara kort, topprad, rader, fält, stegare, segmentval och reglage, som i Android-apparna (#174). En person raderas med Radera, som frågar först eftersom det inte går att ångra.

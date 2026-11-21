@@ -3,7 +3,7 @@
 
 	// An item on the shopping list (web-ui's kh-check-row in a kh-swipe, as CheckRow and SwipeToHide
 	// in android-ui): tick it off, see which dishes it is for, or swipe it away to the left, which
-	// the snackbar can undo (android-ui #118).
+	// the snackbar can undo (android-ui #118); Ta bort also stands last in the row's popup.
 	let {
 		text,
 		amount,
@@ -65,27 +65,25 @@
 				</span>
 				<span class="kh-row__text"><span class="kh-row__title">{text}</span></span>
 			</label>
-			{#if dishes}
-				<button
-					bind:this={infoButton}
-					type="button"
-					class="kh-icon-btn info"
-					aria-label="Till vilka rätter: {text}"
-					popovertarget="{id}-info"
-				>
-					<Icon name="info" />
-				</button>
-				<div bind:this={info} id="{id}-info" class="popup" popover="auto" ontoggle={place}>
+			<!-- On every row, with Ta bort last, since a mouse cannot swipe (android-ui #118). -->
+			<button
+				bind:this={infoButton}
+				type="button"
+				class="kh-icon-btn info"
+				aria-label={dishes ? `Till vilka rätter: ${text}` : `Mer om ${text}`}
+				popovertarget="{id}-info"
+			>
+				<Icon name="info" />
+			</button>
+			<div bind:this={info} id="{id}-info" class="popup" popover="auto" ontoggle={place}>
+				{#if dishes}
 					<strong>Till</strong>
 					<span>{dishes}</span>
-					<button type="button" class="remove" aria-label="Ta bort {text}" onclick={remove}>
-						<Icon name="delete" />Ta bort
-					</button>
-				</div>
-			{:else}
-				<!-- Swiping is not for everyone, so the row can be removed with a button too. -->
-				<button type="button" class="remove hidden" onclick={onremove}>Ta bort {text}</button>
-			{/if}
+				{/if}
+				<button type="button" class="remove" aria-label="Ta bort {text}" onclick={remove}>
+					<Icon name="delete" />Ta bort
+				</button>
+			</div>
 			{#if amount}<span class="amount">{amount}</span>{/if}
 		</div>
 	</kh-swipe>
@@ -132,11 +130,6 @@
 		white-space: nowrap;
 	}
 
-	/* No info button: the amount stands where it would, as the rows' amounts line up. */
-	.hidden + .amount {
-		margin-left: 48px;
-	}
-
 	.popup {
 		position: fixed;
 		inset: auto;
@@ -180,22 +173,5 @@
 
 	.popup .remove :global(svg) {
 		width: 1rem;
-	}
-
-	/* Out of sight until it has the focus, as from the keyboard. */
-	.remove.hidden {
-		position: absolute;
-		right: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		border: 0;
-		border-radius: 1rem;
-		background: var(--kh-error-container);
-		color: var(--kh-on-error-container);
-		font: var(--kh-type-button);
-		clip-path: inset(50%);
-	}
-
-	.remove.hidden:focus {
-		clip-path: none;
 	}
 </style>
