@@ -72,10 +72,12 @@ test('the week shopping list is made from the dishes and ticked off in the store
 	await page.getByRole('button', { name: 'Gör om listan från veckan' }).click();
 	await expect(page.getByRole('checkbox', { name: 'Kaffe' })).toBeVisible();
 	await expect(page.getByRole('checkbox', { name: 'Gul lök' })).toBeChecked();
-	// Without swiping, as from the keyboard, an item without dishes is removed with its button.
-	await page.getByRole('button', { name: 'Ta bort Te' }).focus();
-	await page.keyboard.press('Enter');
+	// Without swiping, as with a mouse, an item written by hand is removed from its popup, last.
+	await page.getByRole('button', { name: 'Mer om Te' }).click();
+	await page.getByRole('button', { name: 'Ta bort Te' }).click();
 	await expect(page.getByRole('checkbox', { name: 'Te' })).toHaveCount(0);
+	await page.locator('.kh-snackbar').getByRole('button', { name: 'Ångra' }).click();
+	await expect(page.getByRole('checkbox', { name: 'Te' })).toBeVisible();
 });
 
 /**
