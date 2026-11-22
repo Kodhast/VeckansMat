@@ -643,6 +643,27 @@ describe('the offers', () => {
 				offer: chosen(kyckling)
 			});
 
+			// With two other dinners on an offer, an alternative's offer is left out, as for the week.
+			for (const weekday of [2, 3])
+				await setWeekRow(
+					db,
+					WEEK,
+					{
+						weekday,
+						meal: 'dinner',
+						text: `Rätt ${weekday}`,
+						reason: 'Förslag',
+						offer: chosen(kyckling)
+					},
+					[]
+				);
+			await setWeekRow(db, WEEK, swap!.before, []);
+			await swapRow(db, WEEK, MONDAY, vi.fn<Ask>());
+			expect((await getWeek(db, WEEK)).rows[0]).toMatchObject({
+				text: 'Kycklingsoppa',
+				offer: null
+			});
+
 			// Written by hand, the day has no offer.
 			await setWeekRow(db, WEEK, { ...MONDAY, text: 'Kycklinggryta' }, []);
 			expect((await getWeek(db, WEEK)).rows[0].offer).toBeNull();

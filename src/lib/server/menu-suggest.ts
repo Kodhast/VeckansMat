@@ -36,6 +36,8 @@ export class MenuSuggestError extends Error {
 const PAST_WEEKS = 8;
 /** Reserves kept for each day, so a swap needs no new call until they are used up. */
 const RESERVES = 2;
+/** Dinners built on an offer in a week, as the prompt asks. */
+const MAX_OFFER_DINNERS = 2;
 
 /** A suggested day: the dish, why, and what to swap to. */
 export type SuggestedRow = Slot & Choice & { alternatives: Choice[] };
@@ -104,7 +106,7 @@ export async function suggestMenu(request: MenuRequest, ask: Ask): Promise<Sugge
 			choices.push(choice);
 		}
 		const [first, ...rest] = choices;
-		if (first?.offer && ++offerDinners > 2) delete first.offer;
+		if (first?.offer && ++offerDinners > MAX_OFFER_DINNERS) delete first.offer;
 		if (first) suggested.push({ ...slot, ...first, alternatives: rest.slice(0, RESERVES) });
 	}
 	if (!suggested.length) throw new MenuSuggestError('failed');
@@ -219,7 +221,14 @@ export async function swapRow(
 		const [suggested] = await suggestMenu({ ...fresh, passedOn }, ask);
 		choices = [suggested, ...suggested.alternatives];
 	}
-	const [next, ...rest] = choices;
+	const [chosen, ...rest] = choices;
+	// Two dinners on an offer at most, as for the week: an alternative brings its offer only when
+	// the other days leave room for it.
+	const onOffer = others.filter((r) => r.meal === 'dinner' && r.offer).length;
+	const next =
+		slot.meal === 'dinner' && onOffer >= MAX_OFFER_DINNERS
+			? { ...chosen, offer: undefined }
+			: chosen;
 	await setWeekRow(
 		db,
 		weekStart,
