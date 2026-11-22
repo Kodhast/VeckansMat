@@ -60,7 +60,8 @@ function removedOf(form: FormData): RemovedItem {
 		const item = JSON.parse(String(form.get('item')));
 		const text = typeof item.text === 'string' ? item.text.trim().slice(0, 200) : '';
 		const textOrNull = (v: unknown) => (typeof v === 'string' ? v.slice(0, 200) : null);
-		const amountEdited = item.amountEdited === true;
+		// A hand item has no amount of Claude's to go back to (ADR 0027).
+		const amountEdited = item.amountEdited === true && item.origin !== 'hand';
 		if (
 			text &&
 			Number.isInteger(item.position) &&

@@ -83,20 +83,26 @@ export function sectionRank(section: string | null): number {
 /** How much − and + change an amount: 100 for grams, a half for kilos and litres, else one. */
 function stepOf(unit: string): number {
 	const lower = unit.toLowerCase();
-	if (lower === 'g') return 100;
-	if (lower === 'kg' || lower === 'l') return 0.5;
+	if (lower === 'g' || lower === 'gram') return 100;
+	if (['kg', 'kilo', 'l', 'liter'].includes(lower)) return 0.5;
 	return 1;
 }
 
+/** What after a number makes it part of a larger one: a fraction, a range or a thousands group. */
+const PART_OF_MORE = /^(?:\s*[/–-]\s*\d|\s+\d+\s*\/|\s\d{3}(?!\d)|\s*[½¼¾⅓⅔])/;
+
 /**
  * The amount with its first number one step up (`direction` 1) or down (−1), in the unit after it,
- * written with a decimal comma. Down stops at one step, so that an item is never none; the amount
+ * written with a decimal comma. A fraction, range or number with a thousands space is answered
+ * unchanged, as there is no one number to step. Down stops at one step, so that an item is never none; the amount
  * is answered unchanged then, and when it has no number to change.
  */
 export function stepAmount(amount: string, direction: 1 | -1): string {
 	const match = /(\d+(?:[.,]\d+)?)(\s*)(\p{L}*)/u.exec(amount);
 	if (!match) return amount;
 	const [whole, number, space, unit] = match;
+	// Stepping only part of "1/2", "2–3" or "1 000" would give nonsense, so they are left as written.
+	if (PART_OF_MORE.test(amount.slice(match.index + number.length))) return amount;
 	const value = Number(number.replace(',', '.'));
 	const step = stepOf(unit);
 	if (direction < 0 && value <= step) return amount;
