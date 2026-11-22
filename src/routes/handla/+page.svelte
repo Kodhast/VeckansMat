@@ -13,7 +13,14 @@
 	import WeekHeader from '#lib/WeekHeader.svelte';
 	import type { RemovedItem, ShoppingItem } from '#lib/server/db/shopping.ts';
 	import { cleanText, plural } from '#lib/names.ts';
-	import { BASKET_LOOK, HAND_LOOK, lookOf, sectionRank, type Look } from '#lib/shopping.ts';
+	import {
+		BASKET_LOOK,
+		HAND_LOOK,
+		lookOf,
+		questionOf,
+		sectionRank,
+		type Look
+	} from '#lib/shopping.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -42,7 +49,10 @@
 	let removed = $state<RemovedItem | null>(null);
 	// The item whose amount is being changed, and amounts saved but not yet answered.
 	let amountOf = $state<ShoppingItem | null>(null);
-	type Amount = Pick<ShoppingItem, 'amount' | 'amountEdited' | 'amountBefore'>;
+	type Amount = Pick<
+		ShoppingItem,
+		'amount' | 'amountEdited' | 'amountBefore' | 'amountChange' | 'amountSuggested'
+	>;
 	let pendingAmounts = $state<Record<number, Amount & { change: number }>>({});
 	let amountChanges = 0;
 	// Items swiped away, hidden until the server has answered.
@@ -60,14 +70,7 @@
 			.filter((item) => !removing[item.id])
 			.map((item) => {
 				const pending = pendingAmounts[item.id];
-				return pending
-					? {
-							...item,
-							amount: pending.amount,
-							amountEdited: pending.amountEdited,
-							amountBefore: pending.amountBefore
-						}
-					: item;
+				return pending ? { ...item, ...pending } : item;
 			})
 	);
 	let toBuy = $derived(shown.filter((item) => !isChecked(item)));
@@ -187,7 +190,8 @@
 		const amount = {
 			amount: clean || null,
 			amountEdited: edited,
-			amountBefore: edited ? before : null
+			amountBefore: edited ? before : null,
+			...ASKS_NO_MORE
 		};
 		changeAmount(item, amount, 'amount', { amount: clean });
 	}
@@ -198,10 +202,49 @@
 		if (!item) return;
 		changeAmount(
 			item,
-			{ amount: item.amountBefore, amountEdited: false, amountBefore: null },
+			{ amount: item.amountBefore, amountEdited: false, amountBefore: null, ...ASKS_NO_MORE },
 			'resetAmount',
 			{}
 		);
+	}
+
+	// The dishes changed since the amount was changed by hand (#197): keep it, or take Claude's.
+	const ASKS_NO_MORE = { amountChange: null, amountSuggested: null };
+	function keepAmount() {
+		const item = amountOf;
+		amountOf = null;
+		if (!item) return;
+		changeAmount(item, { ...item, ...ASKS_NO_MORE }, 'keepAmount', {});
+	}
+
+	function takeSuggested() {
+		const item = amountOf;
+		amountOf = null;
+		if (!item?.amountSuggested) return;
+		const amount = { amount: item.amountSuggested, amountEdited: false, amountBefore: null };
+		changeAmount(item, { ...amount, ...ASKS_NO_MORE }, 'takeSuggested', {});
+	}
+
+	// How many items ask, and how many did when the notice was closed, per week on this phone; it
+	// comes back when more ask.
+	let asking = $derived(toBuy.filter((item) => item.amountChange).length);
+	const CLOSED_KEY = 'handla-fragor-stangda';
+	let closedAt = $state<Record<string, number>>({});
+	$effect(() => {
+		try {
+			const stored = JSON.parse(localStorage.getItem(CLOSED_KEY) ?? 'null');
+			if (stored && typeof stored === 'object') closedAt = stored;
+		} catch {
+			// Nothing remembered, or no storage.
+		}
+	});
+	function closeAsking() {
+		closedAt[data.weekStart] = asking;
+		try {
+			localStorage.setItem(CLOSED_KEY, JSON.stringify(closedAt));
+		} catch {
+			// Closed for this visit only.
+		}
 	}
 
 	async function remove(item: ShoppingItem) {
@@ -238,6 +281,7 @@
 		text={item.text}
 		amount={item.amount}
 		amountEdited={item.amountEdited}
+		question={questionOf(item)}
 		note={noteOf(item)}
 		dishes={item.dishes.length ? dishesOf(item) : ''}
 		checked={isChecked(item)}
@@ -287,6 +331,20 @@
 
 	{#if answers.failed}
 		<p class="error" role="alert">Det gick inte att spara. Kontrollera nätet och försök igen.</p>
+	{/if}
+
+	{#if !making && asking > (closedAt[data.weekStart] ?? 0)}
+		<section class="kh-notice asking">
+			<span class="kh-notice__text">
+				<strong class="kh-notice__title">
+					{plural(asking, 'vara du ändrat har', 'varor du ändrat har')} fått ändrade rätter
+				</strong>
+				<span class="hint">Tryck på mängden och välj din eller Claudes.</span>
+			</span>
+			<button type="button" class="kh-icon-btn" aria-label="Stäng" onclick={closeAsking}>
+				<Icon name="close" />
+			</button>
+		</section>
 	{/if}
 
 	{#if making}
@@ -413,6 +471,8 @@
 	dishes={amountOf?.dishes.length ? dishesOf(amountOf) : ''}
 	onsave={saveAmount}
 	onreset={resetAmount}
+	onkeep={keepAmount}
+	ontake={takeSuggested}
 	onclose={() => (amountOf = null)}
 />
 
@@ -497,6 +557,16 @@
 
 	.making p {
 		margin: 0;
+	}
+
+	/* The ✕ stands at the top, in the notice's own colour. */
+	.asking .kh-icon-btn {
+		align-self: flex-start;
+		color: inherit;
+	}
+
+	.asking .hint {
+		font: var(--kh-type-item-subtitle);
 	}
 
 	.notice {

@@ -26,3 +26,20 @@ det.
 - Sätts mängden tillbaka till Claudes, för hand eller med knappen, är varan inte längre ändrad och
   räknas om nästa gång.
 - Ingen enhet lagras separat; − och + tolkar texten (`stepAmount` i `src/lib/shopping.ts`).
+
+## Tillägg 2026-11-22: när rätterna ändras (#197)
+
+En ändrad vara låg kvar oförändrad så länge någon av dess rätter fanns i veckan. Fick den en ny
+rätt med samma ingrediens överlevde Claudes nya vara bredvid den, och förlorade den en rätt stod den
+gamla mängden kvar. Ägaren valde 2026-11-22 att varan frågar.
+
+- När listan görs om tar en ändrad vara in Claudes nya vara för samma rader: dess rader blir den
+  ändrade varans, dess mängd sparas som förslag (`amount_suggested`) och Claudes vara läggs inte
+  till. Hur rätterna ändrats sparas i `amount_change` (`added`, `removed` eller `changed`), och en
+  borttagen rätts rader tas bort ur varan.
+- Varan visar frågan på raden och i arket: "Behåll" tar bort frågan och mängden är fortfarande
+  ändrad; "Ta Claudes" gör mängden till Claudes, och varan räknas om nästa gång.
+- Är rätterna desamma som när mängden ändrades frågar varan inget. Räknar Claude samma mängd som
+  den ändrade frågar den inte heller. En vara vars alla rätter är borta tas bort som förut.
+- Varor utan rader jämförs med Å, Ä och Ö vikta till gemener; SQLites `lower()` gör det bara för
+  ASCII.

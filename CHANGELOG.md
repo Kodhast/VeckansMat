@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.20.0
+
+- En vara vars mängd du ändrat frågar när veckans rätter ändrats sedan (#197): en punkt vid mängden och en rad under namnet säger vad Claude räknar nu, och i arket väljer du "Behåll" eller "Ta Claudes". En notis överst säger hur många varor det gäller och går att stänga. Listan visar inte längre samma vara två gånger när en ny rätt behöver något du redan ändrat, och "Ägg" och "ägg" blir en vara.
+
 ## 0.19.3
 
 - Byts en middag i veckoförslaget mot ett alternativ som bygger på ett erbjudande, följer erbjudandet bara med om veckan har färre än två sådana middagar. Annars blir det tre, fler än förslaget själv ger.

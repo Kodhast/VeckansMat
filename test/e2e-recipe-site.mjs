@@ -97,6 +97,18 @@ function shopping(text) {
 				section: 'Skafferi',
 				lines: [`${dish.number}.1`]
 			})),
+			// With a leek soup on the week, leeks for every dish, so that a dish added later has
+			// its line in an item already there.
+			...(dishes.some((dish) => /purjolök/i.test(dish.name))
+				? [
+						{
+							text: 'Purjolök',
+							amount: `${dishes.length} st`,
+							section: 'Frukt och grönt',
+							lines: dishes.map((dish) => `${dish.number}.2`)
+						}
+					]
+				: []),
 			{ text: 'Gul lök', amount: '2 st', section: 'Frukt och grönt', lines: [] },
 			{ text: 'Salt', amount: '', section: 'Finns kanske hemma', lines: [] }
 		]

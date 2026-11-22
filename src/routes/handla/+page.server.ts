@@ -6,10 +6,12 @@ import {
 	deleteShoppingItem,
 	getShoppingBasis,
 	getShoppingList,
+	keepShoppingItemAmount,
 	resetShoppingItemAmount,
 	restoreShoppingItem,
 	setShoppingItemAmount,
 	setShoppingItemChecked,
+	takeSuggestedAmount,
 	type Line,
 	type RemovedItem
 } from '#lib/server/db/shopping.ts';
@@ -126,6 +128,19 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const weekStart = weekOf(form);
 		await resetShoppingItemAmount(env.DB, idOf(form));
+		return { items: await getShoppingList(env.DB, weekStart) };
+	},
+	// The dishes changed since the amount was changed by hand: keep it, or take Claude's (#197).
+	keepAmount: async ({ request }) => {
+		const form = await request.formData();
+		const weekStart = weekOf(form);
+		await keepShoppingItemAmount(env.DB, weekStart, idOf(form));
+		return { items: await getShoppingList(env.DB, weekStart) };
+	},
+	takeSuggested: async ({ request }) => {
+		const form = await request.formData();
+		const weekStart = weekOf(form);
+		await takeSuggestedAmount(env.DB, weekStart, idOf(form));
 		return { items: await getShoppingList(env.DB, weekStart) };
 	},
 	// Answers with what was removed too, which the page sends back to undo it.

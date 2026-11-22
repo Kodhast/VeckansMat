@@ -115,3 +115,18 @@ export function stepAmount(amount: string, direction: 1 | -1): string {
 		amount.slice(match.index + whole.length)
 	);
 }
+
+const CHANGE_LABELS = { added: 'Ny rätt', removed: 'Rätt borta', changed: 'Rätterna ändrade' };
+
+/**
+ * What an item changed by hand says under its name when its dishes have changed since (#197), or
+ * empty when they have not.
+ */
+export function questionOf(item: {
+	amountChange: 'added' | 'removed' | 'changed' | null;
+	amountSuggested: string | null;
+}): string {
+	if (!item.amountChange) return '';
+	const label = CHANGE_LABELS[item.amountChange];
+	return item.amountSuggested ? `${label} · Claude räknar ${item.amountSuggested}` : label;
+}
