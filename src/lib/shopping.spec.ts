@@ -47,6 +47,19 @@ describe('the amount stepped by − and +', () => {
 
 	it('leaves an amount without a number', () => {
 		expect(stepAmount('en burk', 1)).toBe('en burk');
+	});
+
+	it('leaves fractions, ranges and thousands as written, since there is no one number to step', () => {
+		for (const amount of ['1/2 l', '1 1/2 dl', '1½ dl', '2-3 st', '2 – 3 st', '1 000 g']) {
+			expect(stepAmount(amount, 1)).toBe(amount);
+			expect(stepAmount(amount, -1)).toBe(amount);
+		}
+	});
+
+	it('steps a unit written out like its short form', () => {
+		expect(stepAmount('1 liter', 1)).toBe('1,5 liter');
+		expect(stepAmount('2 kilo', -1)).toBe('1,5 kilo');
+		expect(stepAmount('300 gram', 1)).toBe('400 gram');
 		expect(stepAmount('', -1)).toBe('');
 	});
 });

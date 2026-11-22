@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
-	import type { ActionResult } from '$app/forms';
-	import { postAction, type Fields } from '#lib/actions.ts';
+	import type { Fields } from '#lib/actions.ts';
+	import { Answers } from '#lib/answers.svelte.ts';
 	import DayEditor from '#lib/DayEditor.svelte';
 	import DishPicker from '#lib/DishPicker.svelte';
 	import Icon from '#lib/Icon.svelte';
@@ -33,18 +33,16 @@
 
 	let { data }: PageProps = $props();
 
-	// What the latest change answered with, per week, which the page shows until it loads again.
-	// An answer to an older change than one already shown is left out.
-	let answered = $state<Record<string, { week: Week; recipes: RecipeSummary[]; change: number }>>(
-		{}
+	type Answer = { week: Week; recipes: RecipeSummary[] };
+	const answers = new Answers<Answer>((answer) =>
+		answer.week ? [(answer as Answer).week.weekStart, answer as Answer] : null
 	);
-	let changes = 0;
 	$effect.pre(() => {
 		void data;
-		answered = {};
+		answers.clear();
 	});
-	let week = $derived(answered[data.week.weekStart]?.week ?? data.week);
-	let recipes = $derived(answered[data.week.weekStart]?.recipes ?? data.recipes);
+	let week = $derived(answers.of(data.week.weekStart)?.week ?? data.week);
+	let recipes = $derived(answers.of(data.week.weekStart)?.recipes ?? data.recipes);
 
 	// Text just written shows at once, before the server has answered.
 	let pending = $state<Record<string, string>>({});
@@ -69,7 +67,6 @@
 			(r) => !!notBefore({ ...r, favourite: r.vote === 'favorit' }, rest)
 		)
 	);
-	let failed = $state(false);
 	// Who eats, as just tapped, before the server has answered.
 	let pendingEaters = $state<Record<string, number[]>>({});
 	let eaterIds = $derived(pendingEaters[week.weekStart] ?? week.eaters);
@@ -137,19 +134,7 @@
 	);
 	let offerChains = $derived(listText(data.offerChains.map(chainLabel)));
 
-	async function post(action: string, fields: Fields): Promise<ActionResult | null> {
-		const change = ++changes;
-		const result = await postAction(action, fields);
-		if (result?.type === 'success' && result.data?.week) {
-			const fresh = result.data as { week: Week; recipes: RecipeSummary[] };
-			const weekStart = fresh.week.weekStart;
-			if (change > (answered[weekStart]?.change ?? 0)) answered[weekStart] = { ...fresh, change };
-		}
-		// A failure stays on screen until the page is loaded again. What an action itself turns
-		// down is for its caller to show.
-		if (!result || result.type === 'error') failed = true;
-		return result;
-	}
+	const post = (action: string, fields: Fields) => answers.post(action, fields);
 
 	/** Posts to Claude's actions, and shows when Claude could not help. */
 	async function postSuggest(action: string, fields: Fields) {
@@ -402,7 +387,7 @@
 		</section>
 	{/if}
 
-	{#if failed}
+	{#if answers.failed}
 		<p class="error" role="alert">Det gick inte att spara. Kontrollera nätet och försök igen.</p>
 	{/if}
 	{#if suggestError?.weekStart === week.weekStart}

@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.19.2
+
+- − och + i Handla lämnar bråk, intervall och tusental som "1/2 l", "2–3 st" och "1 000 g" orörda i stället för att ändra en del av talet, och "liter", "kilo" och "gram" stegar som "l", "kg" och "g". En vara du skrivit själv får aldrig "Som Claude räknade" när den kommer tillbaka med Ångra.
+
 ## 0.19.1
 
 - En dag i veckan håller högst ett rättnamn (100 tecken) och veckans önskemål högst 500 tecken, även när en hel receptsida klistras in. En ändring i Handla för en okänd vecka sparas inte längre innan den avvisas.

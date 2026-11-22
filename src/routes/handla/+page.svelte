@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { postAction, type Fields } from '#lib/actions.ts';
+	import type { Fields } from '#lib/actions.ts';
+	import { Answers } from '#lib/answers.svelte.ts';
 	import AddItemSheet from '#lib/AddItemSheet.svelte';
 	import AmountSheet from '#lib/AmountSheet.svelte';
 	import { useToolbarAction } from '#lib/toolbar.svelte.ts';
@@ -17,15 +18,15 @@
 
 	let { data }: PageProps = $props();
 
-	// The list as the latest change answered with it, per week, which the page shows until it
-	// loads again. An answer to an older change than one already shown is left out.
-	let answered = $state<Record<string, { items: ShoppingItem[]; change: number }>>({});
-	let changes = 0;
+	// The list as the latest change answered with it, per week.
+	const answers = new Answers<ShoppingItem[]>((answer, fields) =>
+		answer.items ? [String(fields.weekStart), answer.items as ShoppingItem[]] : null
+	);
 	$effect.pre(() => {
 		void data;
-		answered = {};
+		answers.clear();
 	});
-	let items = $derived(answered[data.weekStart]?.items ?? data.items);
+	let items = $derived(answers.of(data.weekStart) ?? data.items);
 
 	// A tap shows at once, before the server has answered.
 	let pendingChecked = $state<Record<number, boolean>>({});
@@ -36,7 +37,6 @@
 	// Per week, so that the other week shows its own list meanwhile.
 	let makingWeeks = $state<Record<string, boolean>>({});
 	let making = $derived(!!makingWeeks[data.weekStart]);
-	let failed = $state(false);
 	// The latest item put in the basket, or removed, which the snackbar can undo.
 	let basketed = $state<ShoppingItem | null>(null);
 	let removed = $state<RemovedItem | null>(null);
@@ -134,18 +134,8 @@
 	let onlyName = $derived(data.dishes.filter((dish) => !dish.hasIngredients));
 	let isEmpty = $derived(items.length === 0 && added.length === 0);
 
-	async function post(action: string, fields: Fields) {
-		const weekStart = data.weekStart;
-		const change = ++changes;
-		const result = await postAction(action, { weekStart, ...fields });
-		if (result?.type === 'success' && result.data?.items) {
-			const fresh = result.data.items as ShoppingItem[];
-			if (change > (answered[weekStart]?.change ?? 0))
-				answered[weekStart] = { items: fresh, change };
-		}
-		if (!result || result.type === 'error') failed = true;
-		return result;
-	}
+	const post = (action: string, fields: Fields) =>
+		answers.post(action, { weekStart: data.weekStart, ...fields });
 
 	async function make() {
 		const weekStart = data.weekStart;
@@ -295,7 +285,7 @@
 		</div>
 	{/if}
 
-	{#if failed}
+	{#if answers.failed}
 		<p class="error" role="alert">Det gick inte att spara. Kontrollera nätet och försök igen.</p>
 	{/if}
 
