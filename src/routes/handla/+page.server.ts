@@ -99,7 +99,8 @@ export const actions: Actions = {
 			throw e;
 		}
 	},
-	// A change answers with the list, so the page shows it without loading again.
+	// A change answers with the list, so the page shows it without loading again. The week is read
+	// before anything is written, so a form with an unknown week changes nothing.
 	add: async ({ request }) => {
 		const form = await request.formData();
 		const weekStart = weekOf(form);
@@ -108,30 +109,35 @@ export const actions: Actions = {
 	},
 	check: async ({ request }) => {
 		const form = await request.formData();
+		const weekStart = weekOf(form);
 		await setShoppingItemChecked(env.DB, idOf(form), form.get('checked') === 'true');
-		return { items: await getShoppingList(env.DB, weekOf(form)) };
+		return { items: await getShoppingList(env.DB, weekStart) };
 	},
 	// An amount written in; blank is none.
 	amount: async ({ request }) => {
 		const form = await request.formData();
+		const weekStart = weekOf(form);
 		await setShoppingItemAmount(env.DB, idOf(form), String(form.get('amount') ?? '').slice(0, 200));
-		return { items: await getShoppingList(env.DB, weekOf(form)) };
+		return { items: await getShoppingList(env.DB, weekStart) };
 	},
 	// "Som Claude räknade": the amount before it was changed.
 	resetAmount: async ({ request }) => {
 		const form = await request.formData();
+		const weekStart = weekOf(form);
 		await resetShoppingItemAmount(env.DB, idOf(form));
-		return { items: await getShoppingList(env.DB, weekOf(form)) };
+		return { items: await getShoppingList(env.DB, weekStart) };
 	},
 	// Answers with what was removed too, which the page sends back to undo it.
 	remove: async ({ request }) => {
 		const form = await request.formData();
+		const weekStart = weekOf(form);
 		const removed = await deleteShoppingItem(env.DB, idOf(form));
-		return { items: await getShoppingList(env.DB, weekOf(form)), removed };
+		return { items: await getShoppingList(env.DB, weekStart), removed };
 	},
 	restore: async ({ request }) => {
 		const form = await request.formData();
-		await restoreShoppingItem(env.DB, weekOf(form), removedOf(form));
-		return { items: await getShoppingList(env.DB, weekOf(form)) };
+		const weekStart = weekOf(form);
+		await restoreShoppingItem(env.DB, weekStart, removedOf(form));
+		return { items: await getShoppingList(env.DB, weekStart) };
 	}
 };

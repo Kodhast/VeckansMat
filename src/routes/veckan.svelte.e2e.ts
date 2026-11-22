@@ -434,3 +434,20 @@ async function textTop(locator: Locator) {
 		};
 	});
 }
+
+test('a day keeps at most a dish name, even when a whole page is pasted in', async ({ page }) => {
+	await open(page, '/');
+	const pasted = `Kycklinggryta ${'med mycket text från en receptsida '.repeat(10)}`;
+	await writeDay(page, 'fredag', pasted);
+	await page.keyboard.press('Escape');
+	await reload(page);
+
+	const kept = pasted.slice(0, 100).trim();
+	await expect(
+		page.getByRole('button', { name: `Middag fredag: ${kept}`, exact: true })
+	).toBeVisible();
+
+	await page.getByRole('button', { name: /^Middag fredag:/ }).click();
+	await page.getByRole('button', { name: 'Töm raden' }).click();
+	await expect(page.getByRole('button', { name: 'Middag fredag: tom' })).toBeVisible();
+});
