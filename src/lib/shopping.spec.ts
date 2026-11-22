@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sectionRank, stepAmount } from './shopping';
+import { questionOf, sectionRank, stepAmount } from './shopping';
 
 describe('the order of the list headings', () => {
 	it('is the store order, with any other heading after it', () => {
@@ -61,5 +61,18 @@ describe('the amount stepped by − and +', () => {
 		expect(stepAmount('2 kilo', -1)).toBe('1,5 kilo');
 		expect(stepAmount('300 gram', 1)).toBe('400 gram');
 		expect(stepAmount('', -1)).toBe('');
+	});
+});
+
+describe('the question on an item whose dishes changed', () => {
+	it('says how they changed and what Claude counts now', () => {
+		expect(questionOf({ amountChange: null, amountSuggested: null })).toBe('');
+		expect(questionOf({ amountChange: 'added', amountSuggested: '4 st' })).toBe(
+			'Ny rätt · Claude räknar 4 st'
+		);
+		expect(questionOf({ amountChange: 'removed', amountSuggested: '2 dl' })).toBe(
+			'Rätt borta · Claude räknar 2 dl'
+		);
+		expect(questionOf({ amountChange: 'changed', amountSuggested: null })).toBe('Rätterna ändrade');
 	});
 });

@@ -5,6 +5,9 @@ import { guessIngredientsStatements } from './recipes';
 
 type Origin = 'recipe' | 'claude' | 'hand';
 
+/** How an item's dishes changed after its amount was changed by hand. */
+export type AmountChange = 'added' | 'removed' | 'changed';
+
 /** A dish an item is for, and whether its lines are Claude's guess. */
 export interface ItemDish {
 	name: string;
@@ -20,6 +23,13 @@ export interface ShoppingItem {
 	amountEdited: boolean;
 	/** The amount before it was changed by hand, which "Som Claude räknade" puts back. */
 	amountBefore: string | null;
+	/**
+	 * How the dishes of an item changed by hand have changed since, when they have: the item then
+	 * asks whether to keep its amount or take Claude's new one, `amountSuggested`.
+	 */
+	amountChange: AmountChange | null;
+	/** What Claude counts now, when the dishes have changed, or null when it has no new amount. */
+	amountSuggested: string | null;
 	/** The heading the item is listed under: the store section, or the dish for a recipe's line. */
 	section: string | null;
 	/** The dishes whose lines the item covers, in the order its lines were given. */
@@ -81,7 +91,7 @@ export async function getShoppingList(db: D1Database, weekStart: string): Promis
 	const { results } = await db
 		.prepare(
 			`SELECT s.id, s.text, s.amount, s.amount_edited AS amountEdited, s.amount_before AS amountBefore,
-			   s.section, s.origin, s.checked,
+			   s.amount_change AS amountChange, s.amount_suggested AS amountSuggested, s.section, s.origin, s.checked,
 			   (SELECT json_group_array(json_object('name', name, 'guessed', guessed)) FROM
 			     (SELECT r.name, r.ingredients_guessed AS guessed
 			      FROM shopping_item_source l JOIN recipe r ON r.id = l.recipe_id
@@ -137,13 +147,50 @@ export interface Guess {
 	ingredients: string[];
 }
 
+/** Text in lower case, also Å, Ä and Ö, which SQLite's lower() leaves as they are. */
+const lowerSv = (column: string) =>
+	`lower(replace(replace(replace(${column}, 'Å', 'å'), 'Ä', 'ä'), 'Ö', 'ö'))`;
+
+/** Items changed by hand that are not in the basket, which ask when their dishes change. */
+const edited = (e: string) =>
+	`${e}.menu_id = ?1 AND ${e}.checked = 0 AND ${e}.amount_edited = 1 AND ${e}.origin <> 'hand'`;
+/** Items just added for the new list: the only ones out of the basket that are neither written by
+ * hand nor changed by hand, once the old ones are deleted. */
+const fresh = (n: string) =>
+	`${n}.menu_id = ?1 AND ${n}.checked = 0 AND ${n}.amount_edited = 0 AND ${n}.origin <> 'hand'`;
+/** Whether item n covers a line of item e. */
+const shares = (n: string, e: string) => `EXISTS (SELECT 1 FROM shopping_item_source a
+	JOIN shopping_item_source b ON b.recipe_id = a.recipe_id AND b.position = a.position
+	WHERE a.item_id = ${n}.id AND b.item_id = ${e}.id)`;
+/** Whether the line a is in the basket. */
+const IN_BASKET = `EXISTS (SELECT 1 FROM shopping_item_source k JOIN shopping_item c ON c.id = k.item_id
+	WHERE c.menu_id = ?1 AND c.checked = 1 AND k.recipe_id = a.recipe_id AND k.position = a.position)`;
+const EDITED = edited('e');
+const FRESH = fresh('n');
+/**
+ * Whether the new item n is Claude's count of the changed item e: they share a line, and neither
+ * shares one with another item. When Claude splits or merges items differently, which one counts
+ * for which is not clear, so the items are left as they were before #197.
+ */
+const PAIR = `${shares('n', 'e')}
+	AND (SELECT count(*) FROM shopping_item n2 WHERE ${fresh('n2')} AND ${shares('n2', 'e')}) = 1
+	AND (SELECT count(*) FROM shopping_item e2 WHERE ${edited('e2')} AND ${shares('n', 'e2')}) = 1`;
+/** Whether item n covers a line item e does not, and that is not in the basket. */
+const HAS_MORE = `EXISTS (SELECT 1 FROM shopping_item_source a WHERE a.item_id = n.id AND NOT ${IN_BASKET}
+	AND NOT EXISTS (SELECT 1 FROM shopping_item_source b WHERE b.item_id = e.id
+	  AND b.recipe_id = a.recipe_id AND b.position = a.position))`;
+/** Whether the dish is on the week. */
+const ON_WEEK = (recipe: string) =>
+	`EXISTS (SELECT 1 FROM menu_item i WHERE i.recipe_id = ${recipe} AND i.menu_id = ?1 AND i.weekday IS NOT NULL)`;
+
 /**
  * Saves the week's list in place of the one before, with what it was made from (`basis`) and the
- * ingredients Claude guessed. What was written by hand and what is in the basket stays, and so does
- * an item whose amount was changed by hand while a dish of its is on the week. An item whose lines
- * are all covered by items in the basket or changed by hand is not added again; an item that covers
- * no line is known by its text instead. All in one batch, so the basket is read as it is when the
- * list is written.
+ * ingredients Claude guessed. What was written by hand and what is in the basket stays. An item
+ * whose amount was changed by hand stays while a dish of its is on the week; when its dishes have
+ * changed since, it takes in Claude's new item for the same lines and asks whether to keep its
+ * amount or take Claude's (#197). An item whose lines are all covered by items in the basket or
+ * changed by hand is not added again; an item that covers no line is known by its text instead.
+ * All in one batch, so the basket is read as it is when the list is written.
  */
 export async function saveShoppingList(
 	db: D1Database,
@@ -159,6 +206,23 @@ export async function saveShoppingList(
 				   OR EXISTS (SELECT 1 FROM shopping_item_source WHERE item_id = s.id) AND NOT EXISTS
 				     (SELECT 1 FROM shopping_item_source l JOIN menu_item i ON i.recipe_id = l.recipe_id
 				      WHERE l.item_id = s.id AND i.menu_id = ?1 AND i.weekday IS NOT NULL))`
+			)
+			.bind(menuId),
+		// A changed item that lost a dish says so, and is no longer for that dish.
+		db
+			.prepare(
+				`UPDATE shopping_item AS e
+				 SET amount_change = CASE WHEN e.amount_change IN ('added', 'changed') THEN 'changed' ELSE 'removed' END,
+				   amount_suggested = NULL
+				 WHERE ${EDITED} AND EXISTS (SELECT 1 FROM shopping_item_source l
+				   WHERE l.item_id = e.id AND NOT ${ON_WEEK('l.recipe_id')})`
+			)
+			.bind(menuId),
+		db
+			.prepare(
+				`DELETE FROM shopping_item_source AS l
+				 WHERE NOT ${ON_WEEK('l.recipe_id')} AND EXISTS
+				   (SELECT 1 FROM shopping_item e WHERE e.id = l.item_id AND ${EDITED})`
 			)
 			.bind(menuId),
 		db.prepare('UPDATE menu SET shopping_basis = ? WHERE id = ?').bind(list.basis, menuId),
@@ -182,6 +246,39 @@ export async function saveShoppingList(
 				)
 				.bind(JSON.stringify(item.lines))
 		]),
+		// A changed item whose dishes changed takes what Claude counts now for the same lines, and
+		// a new dish's line says so. One whose dishes are as they were is left as it is.
+		db
+			.prepare(
+				`UPDATE shopping_item AS e SET
+				   amount_change = CASE
+				     WHEN NOT EXISTS (SELECT 1 FROM shopping_item n WHERE ${FRESH} AND ${PAIR} AND ${HAS_MORE})
+				       THEN e.amount_change
+				     WHEN e.amount_change IN ('removed', 'changed') THEN 'changed'
+				     ELSE 'added' END,
+				   amount_suggested = (SELECT n.amount FROM shopping_item n
+				     WHERE ${FRESH} AND ${PAIR} ORDER BY n.id LIMIT 1)
+				 WHERE ${EDITED} AND EXISTS (SELECT 1 FROM shopping_item n WHERE ${FRESH} AND ${PAIR}
+				   AND (e.amount_change IS NOT NULL OR ${HAS_MORE}))`
+			)
+			.bind(menuId),
+		// The changed item covers the new lines too, so Claude's new item is not added beside it.
+		db
+			.prepare(
+				`INSERT OR IGNORE INTO shopping_item_source (item_id, recipe_id, position)
+				 SELECT e.id, a.recipe_id, a.position
+				 FROM shopping_item e JOIN shopping_item n ON ${FRESH} AND ${PAIR}
+				   JOIN shopping_item_source a ON a.item_id = n.id
+				 WHERE ${EDITED} AND e.amount_change IS NOT NULL AND NOT ${IN_BASKET}`
+			)
+			.bind(menuId),
+		// Claude counting what the household already has is no question.
+		db
+			.prepare(
+				`UPDATE shopping_item AS e SET amount_change = NULL, amount_suggested = NULL
+				 WHERE ${EDITED} AND e.amount_suggested = e.amount`
+			)
+			.bind(menuId),
 		// The items just added are the only ones left out of the basket that are neither written by
 		// hand nor changed by hand; those that stay are kept, c below.
 		db
@@ -195,7 +292,7 @@ export async function saveShoppingList(
 				        AND b.recipe_id = l.recipe_id AND b.position = l.position))
 				   ELSE EXISTS (SELECT 1 FROM shopping_item c
 				     WHERE c.menu_id = ?1 AND (c.checked = 1 OR c.amount_edited = 1) AND c.origin <> 'hand'
-				       AND lower(c.text) = lower(s.text))
+				       AND ${lowerSv('c.text')} = ${lowerSv('s.text')})
 				 END`
 			)
 			.bind(menuId)
@@ -245,7 +342,7 @@ export async function setShoppingItemAmount(
 	const clean = cleanText(amount).slice(0, AMOUNT_MAX).trim() || null;
 	await db
 		.prepare(
-			`UPDATE shopping_item SET amount = ?2,
+			`UPDATE shopping_item SET amount = ?2, amount_change = NULL, amount_suggested = NULL,
 			   amount_edited = (origin <> 'hand' AND ?2 IS NOT o.before),
 			   amount_before = CASE WHEN origin <> 'hand' AND ?2 IS NOT o.before THEN o.before END
 			 FROM (SELECT CASE WHEN amount_edited = 1 THEN amount_before ELSE amount END AS before
@@ -260,10 +357,43 @@ export async function setShoppingItemAmount(
 export async function resetShoppingItemAmount(db: D1Database, id: number): Promise<void> {
 	await db
 		.prepare(
-			`UPDATE shopping_item SET amount = amount_before, amount_before = NULL, amount_edited = 0
+			`UPDATE shopping_item SET amount = amount_before, amount_before = NULL, amount_edited = 0,
+			   amount_change = NULL, amount_suggested = NULL
 			 WHERE id = ? AND amount_edited = 1`
 		)
 		.bind(id)
+		.run();
+}
+
+/** Keeps the amount changed by hand after the dishes changed, and asks no more. */
+export async function keepShoppingItemAmount(
+	db: D1Database,
+	weekStart: string,
+	id: number
+): Promise<void> {
+	await db
+		.prepare(
+			`UPDATE shopping_item SET amount_change = NULL, amount_suggested = NULL
+			 WHERE id = ? AND menu_id = (SELECT id FROM menu WHERE week_start = ?)`
+		)
+		.bind(id, weekStart)
+		.run();
+}
+
+/** Takes what Claude counts now in place of the amount changed by hand; it is Claude's again. */
+export async function takeSuggestedAmount(
+	db: D1Database,
+	weekStart: string,
+	id: number
+): Promise<void> {
+	await db
+		.prepare(
+			`UPDATE shopping_item SET amount = amount_suggested, amount_edited = 0, amount_before = NULL,
+			   amount_change = NULL, amount_suggested = NULL
+			 WHERE id = ? AND menu_id = (SELECT id FROM menu WHERE week_start = ?)
+			   AND amount_suggested IS NOT NULL`
+		)
+		.bind(id, weekStart)
 		.run();
 }
 

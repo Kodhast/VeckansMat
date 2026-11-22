@@ -9,6 +9,7 @@
 		text,
 		amount,
 		amountEdited = false,
+		question = '',
 		note = '',
 		dishes,
 		checked,
@@ -20,6 +21,8 @@
 		amount: string | null;
 		/** Whether the amount was changed by hand, which the pen beside it shows. */
 		amountEdited?: boolean;
+		/** What the item asks when its dishes changed since its amount was changed by hand (#197). */
+		question?: string;
 		/** What the popup says about the amount, such as what Claude worked out. */
 		note?: string;
 		/** The dishes it is for, as one line, or empty. */
@@ -72,7 +75,10 @@
 						onchange={(e) => oncheck(e.currentTarget.checked)}
 					/>
 				</span>
-				<span class="kh-row__text"><span class="kh-row__title">{text}</span></span>
+				<span class="kh-row__text">
+					<span class="kh-row__title">{text}</span>
+					{#if question}<span class="kh-row__subtitle question">{question}</span>{/if}
+				</span>
 			</label>
 			<!-- On every row, with Ta bort last, since a mouse cannot swipe (android-ui #118). -->
 			<button
@@ -96,11 +102,13 @@
 			</div>
 			<button
 				type="button"
-				class={['amount', amountEdited && 'edited', !amount && 'none']}
+				class={['amount', amountEdited && 'edited', !amount && 'none', question && 'asks']}
 				aria-label="Ändra mängd: {text}"
 				onclick={onamount}
 			>
-				{#if amountEdited}<Icon name="edit" />{/if}{amount || '+ mängd'}
+				{#if question}<span class="dot"></span>{:else if amountEdited}<Icon
+						name="edit"
+					/>{/if}{amount || '+ mängd'}
 			</button>
 		</div>
 	</kh-swipe>
@@ -125,6 +133,19 @@
 	.checked :is(.kh-row__title, .amount) {
 		color: var(--kh-on-surface-variant);
 		text-decoration: line-through;
+	}
+
+	/* An item that asks shows it in the app's colour, under the name and beside the amount. */
+	.question {
+		color: var(--kh-primary);
+		font-weight: 500;
+	}
+
+	.dot {
+		inline-size: 0.5rem;
+		block-size: 0.5rem;
+		border-radius: 50%;
+		background-color: var(--kh-primary);
 	}
 
 	.info {
@@ -171,6 +192,10 @@
 	.amount.edited {
 		color: var(--kh-on-surface);
 		font-weight: 600;
+	}
+
+	.amount.asks {
+		color: var(--kh-primary);
 	}
 
 	.amount :global(svg) {

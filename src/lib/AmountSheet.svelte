@@ -10,6 +10,8 @@
 		dishes,
 		onsave,
 		onreset,
+		onkeep,
+		ontake,
 		onclose
 	}: {
 		/** The item whose amount is changed, or null when the sheet is closed. */
@@ -18,6 +20,10 @@
 		dishes: string;
 		onsave: (amount: string) => void;
 		onreset: () => void;
+		/** Keeps the amount changed by hand, when the dishes changed since (#197). */
+		onkeep: () => void;
+		/** Takes what Claude counts now instead. */
+		ontake: () => void;
 		onclose: () => void;
 	} = $props();
 
@@ -34,6 +40,13 @@
 	let fromClaude = $derived(shown?.origin === 'claude');
 	let less = $derived(stepAmount(draft, -1));
 	let more = $derived(stepAmount(draft, 1));
+	// Asks to keep or take Claude's only while the amount is as it was; one written in is saved.
+	let asks = $derived(!!shown?.amountChange && draft === (shown.amount ?? ''));
+	const CHANGES = {
+		added: 'En ny rätt behöver den här varan',
+		removed: 'En rätt är borta från veckan',
+		changed: 'Rätterna har ändrats'
+	};
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
@@ -43,6 +56,17 @@
 
 <Sheet open={!!item} title={shown?.text ?? ''} {onclose}>
 	{#if dishes}<p class="kh-sheet__subtitle">Till {dishes}</p>{/if}
+	{#if shown?.amountChange}
+		<div class="change">
+			<strong>{CHANGES[shown.amountChange]}</strong>
+			<span>
+				Du ändrade till {shown.amount ?? 'ingen mängd'} innan.
+				{shown.amountSuggested
+					? `Claude räknar nu ${shown.amountSuggested}.`
+					: 'Claude har ingen ny mängd.'}
+			</span>
+		</div>
+	{/if}
 	<form id="amount-form" onsubmit={submit}>
 		<button
 			type="button"
@@ -70,18 +94,33 @@
 			onclick={() => (draft = more)}
 		></button>
 	</form>
-	{#if fromClaude}
+	{#if fromClaude && !shown?.amountChange}
 		<p class="claude">Claude räknade {claudes || 'ingen mängd'}</p>
 	{/if}
 	<div class="kh-sheet__footer">
-		{#if shown?.amountEdited}
-			<button type="button" class="kh-btn kh-btn--text" onclick={onreset}>
-				{fromClaude ? 'Som Claude räknade' : 'Som förut'}
+		{#if asks}
+			<button type="button" class="kh-btn kh-btn--text" onclick={onkeep}>
+				Behåll {shown?.amount ?? 'ingen mängd'}
 			</button>
+			{#if shown?.amountSuggested}
+				<button type="button" class="kh-btn save" onclick={ontake}>
+					Ta Claudes {shown.amountSuggested}
+				</button>
+			{/if}
+		{:else}
+			{@render footer()}
 		{/if}
-		<button type="submit" form="amount-form" class="kh-btn save">Spara</button>
 	</div>
 </Sheet>
+
+{#snippet footer()}
+	{#if shown?.amountEdited}
+		<button type="button" class="kh-btn kh-btn--text" onclick={onreset}>
+			{fromClaude ? 'Som Claude räknade' : 'Som förut'}
+		</button>
+	{/if}
+	<button type="submit" form="amount-form" class="kh-btn save">Spara</button>
+{/snippet}
 
 <style>
 	form {
@@ -100,6 +139,21 @@
 		margin: 0;
 		font: var(--kh-type-item-subtitle);
 		color: var(--kh-on-surface-variant);
+	}
+
+	.change {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		padding: var(--kh-space-m);
+		border-radius: var(--kh-radius-row);
+		background-color: var(--kh-primary-container);
+		color: var(--kh-on-primary-container);
+		font: var(--kh-type-item-subtitle);
+	}
+
+	.change strong {
+		font: var(--kh-type-item-title);
 	}
 
 	.save {

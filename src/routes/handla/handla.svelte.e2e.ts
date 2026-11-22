@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { countLoads, open, reload, saved, swipeAt, writeDay } from '../../../test/e2e';
+import { shownWeek, swedishToday } from '../../lib/weeks';
 
 // Has a Worker of its own in playwright.config.ts, since it writes the same weeks as the tests of
 // Veckan. The made-up dishes come from test/e2e-seed.sql.
@@ -236,4 +237,56 @@ test('a list being made for one week leaves the other week alone', async ({ page
 	await expect(page).toHaveURL(/vecka=/);
 	await expect(status).toBeHidden();
 	release();
+});
+
+test('an amount changed by hand asks when a new dish needs the item too', async ({ page }) => {
+	// The week the app does not open on, which no other test makes a list for.
+	const shown = shownWeek(null, swedishToday());
+	const week = shown.weekStart === shown.thisWeek ? shown.nextWeek : shown.thisWeek;
+	await open(page, `/?vecka=${week}`);
+	await writeDay(page, 'måndag', 'Purjolökssoppa');
+	await page.keyboard.press('Escape');
+
+	await open(page, `/handla?vecka=${week}`);
+	await page.getByRole('button', { name: 'Gör inköpslistan' }).click();
+	const amount = page.getByRole('button', { name: 'Ändra mängd: Purjolök' });
+	await expect(amount).toHaveText('1 st');
+	await amount.click();
+	const sheet = page.getByRole('dialog', { name: 'Purjolök' });
+	await sheet.getByRole('textbox', { name: 'Mängd' }).fill('3 st');
+	await sheet.getByRole('button', { name: 'Spara' }).click();
+	await expect(amount).toHaveText('3 st');
+
+	// A fish gratin on Tuesday needs leeks too, and the list is made again.
+	await open(page, `/?vecka=${week}`);
+	await writeDay(page, 'tisdag', 'Fiskgratäng');
+	await page.keyboard.press('Escape');
+	await open(page, `/handla?vecka=${week}`);
+	await page.getByRole('button', { name: 'Gör om listan från veckan' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Claude gör listan' })).toBeHidden();
+
+	// One leek item, the household's amount, and the question.
+	await expect(page.getByRole('checkbox', { name: 'Purjolök', exact: true })).toHaveCount(1);
+	await expect(amount).toHaveText('3 st');
+	await expect(page.getByText('Ny rätt · Claude räknar 2 st')).toBeVisible();
+	const notice = page.getByText('1 vara du ändrat har fått ändrade rätter');
+	await expect(notice).toBeVisible();
+
+	// The notice is closed for the week, also when the page is loaded again.
+	await page.getByRole('button', { name: 'Stäng' }).click();
+	await expect(notice).toBeHidden();
+	await reload(page);
+	await expect(page.getByText('Ny rätt · Claude räknar 2 st')).toBeVisible();
+	await expect(notice).toBeHidden();
+
+	// Taking Claude's asks no more.
+	await amount.click();
+	await expect(sheet.getByText('En ny rätt behöver den här varan')).toBeVisible();
+	await sheet.getByRole('button', { name: 'Ta Claudes 2 st' }).click();
+	await expect(amount).toHaveText('2 st');
+	await expect(page.getByText('Ny rätt · Claude räknar 2 st')).toBeHidden();
+	await saved(page);
+	await reload(page);
+	await expect(amount).toHaveText('2 st');
+	await expect(page.getByText(/Claude räknar/)).toHaveCount(0);
 });
