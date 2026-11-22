@@ -5,9 +5,9 @@ import type { LayoutServerLoad } from './$types';
 
 /** Who is logged in, as Access tells it, and whether the browser should fetch the name and
  * picture. */
-export const load: LayoutServerLoad = async ({ request, depends }) => {
+export const load: LayoutServerLoad = async ({ locals, depends }) => {
 	depends('app:account');
-	const email = request.headers.get('cf-access-authenticated-user-email');
+	const email = locals.email;
 	if (!email) return { account: null };
 	const stored = await getAccount(env.DB, email);
 	return {

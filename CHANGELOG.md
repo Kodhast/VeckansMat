@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.21.0
+
+- Appen kontrollerar själv att varje begäran kommer genom Cloudflare Access (#194), så att en lucka i Access inte öppnar appen för andra. Preview-adressen svarar inte förrän den har fått samma inställningar.
+
 ## 0.20.0
 
 - En vara vars mängd du ändrat frågar när veckans rätter ändrats sedan (#197): en punkt vid mängden och en rad under namnet säger vad Claude räknar nu, och i arket väljer du "Behåll" eller "Ta Claudes". En notis överst säger hur många varor det gäller och går att stänga. Listan visar inte längre samma vara två gånger när en ny rätt behöver något du redan ändrat, och "Ägg" och "ägg" blir en vara.

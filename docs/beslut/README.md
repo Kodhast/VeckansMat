@@ -32,3 +32,4 @@ med `/adr` i Claude Code.
 | [0025](0025-arbetsflodets-stomme-fran-pluginen.md) | Arbetsflödets stomme från pluginen              | Beslutat                                          |
 | [0026](0026-web-ui-i-stallet-for-m3e.md)           | web-ui i stället för m3e                        | Beslutat                                          |
 | [0027](0027-mangd-for-hand.md)                     | En mängd ändrad för hand ligger kvar            | Beslutat                                          |
+| [0028](0028-access-token-i-appen.md)               | Appen kontrollerar Access-token själv           | Beslutat                                          |
