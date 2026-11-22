@@ -14,8 +14,9 @@
 		<a class="kh-btn" href="{resolve('/ratter/ny')}?till={recipeId}">
 			<Icon name="camera" />Hämta receptet
 		</a>
-		<a class="kh-btn kh-btn--text" href={resolve('/ratter/[id]/redigera', { id })}>Skriv in själv</a
-		>
+		<a class="kh-btn kh-btn--text" href={resolve('/ratter/[id]/redigera', { id })}>
+			Skriv in själv
+		</a>
 	</div>
 </section>
 

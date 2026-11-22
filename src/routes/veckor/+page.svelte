@@ -64,9 +64,9 @@
 										<li>
 											<span class="day">{item.weekday ? WEEKDAYS[item.weekday - 1] : ''}</span>
 											{#if item.recipeId}
-												<a href={resolve('/ratter/[id]', { id: String(item.recipeId) })}
-													>{item.text}</a
-												>
+												<a href={resolve('/ratter/[id]', { id: String(item.recipeId) })}>
+													{item.text}
+												</a>
 											{:else}
 												<span class="other">{item.text}</span>
 											{/if}

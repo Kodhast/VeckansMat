@@ -32,8 +32,9 @@
 	<div class="kh-snackbar" role="status">
 		<span class="kh-snackbar__text">{text}</span>
 		{#if action}
-			<button type="button" class="kh-snackbar__action" onclick={() => close(true)}>{action}</button
-			>
+			<button type="button" class="kh-snackbar__action" onclick={() => close(true)}>
+				{action}
+			</button>
 		{/if}
 	</div>
 </div>

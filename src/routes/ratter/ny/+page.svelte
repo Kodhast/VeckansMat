@@ -104,9 +104,9 @@
 						<span>
 							Den har redan ingredienser eller steg. Byt namn för att spara den här som en ny rätt.
 						</span>
-						<a href={resolve('/ratter/[id]', { id: String(review.existing.id) })}
-							>Öppna {review.existing.name}</a
-						>
+						<a href={resolve('/ratter/[id]', { id: String(review.existing.id) })}>
+							Öppna {review.existing.name}
+						</a>
 					{/if}
 				</span>
 			</section>

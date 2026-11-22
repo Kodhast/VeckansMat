@@ -155,8 +155,10 @@
 			<a
 				class="kh-btn kh-btn--outlined kh-btn--compact"
 				href="/cdn-cgi/access/logout"
-				data-sveltekit-reload>Logga ut</a
+				data-sveltekit-reload
 			>
+				Logga ut
+			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		</section>
 	{/if}
@@ -171,8 +173,9 @@
 					<span class="kh-row__leading"><Initial name={person.name} index={i} /></span>
 					<span class="kh-row__text">
 						<span class="kh-row__title">{person.name}</span>
-						<span class="kh-row__subtitle">{person.requirements.split('\n')[0] || 'Inga krav'}</span
-						>
+						<span class="kh-row__subtitle">
+							{person.requirements.split('\n')[0] || 'Inga krav'}
+						</span>
 					</span>
 					<span class="kh-chevron"></span>
 				</a>
@@ -225,9 +228,9 @@
 			</div>
 
 			<div class="kh-row lunchbox">
-				<span class="kh-row__text"
-					><span class="kh-row__title" id="lunchbox">Extra portioner till matlådor</span></span
-				>
+				<span class="kh-row__text">
+					<span class="kh-row__title" id="lunchbox">Extra portioner till matlådor</span>
+				</span>
 				<div class="kh-segmented" role="group" aria-labelledby="lunchbox">
 					{#each LUNCHBOX_EXTRA_CHOICES as n (n)}
 						<button
@@ -237,8 +240,10 @@
 							onclick={() => {
 								lunchboxExtra = n;
 								save('lunchboxExtraPortions');
-							}}>{n}</button
+							}}
 						>
+							{n}
+						</button>
 					{/each}
 				</div>
 				<input type="hidden" name="lunchboxExtraPortions" value={lunchboxExtra} />
