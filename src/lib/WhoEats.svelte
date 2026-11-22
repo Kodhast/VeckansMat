@@ -41,8 +41,10 @@
 					type="button"
 					class="kh-chip"
 					aria-pressed={selected}
-					onclick={() => ontoggle(person.id, !selected)}>{person.name}</button
+					onclick={() => ontoggle(person.id, !selected)}
 				>
+					{person.name}
+				</button>
 			{/each}
 		</div>
 	{/if}

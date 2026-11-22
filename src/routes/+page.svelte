@@ -453,9 +453,9 @@
 					{#if choosingLunch}
 						<div class="kh-chips" role="group" aria-label="Välj dag för lunch">
 							{#each freeLunchDays as weekday (weekday)}
-								<button type="button" class="kh-chip" onclick={() => addLunch(weekday)}
-									>{WEEKDAYS[weekday - 1]}</button
-								>
+								<button type="button" class="kh-chip" onclick={() => addLunch(weekday)}>
+									{WEEKDAYS[weekday - 1]}
+								</button>
 							{/each}
 						</div>
 					{/if}
@@ -501,9 +501,9 @@
 				{hasSuggestion ? 'Bara Claudes rätter' : 'Fyll i resten'}
 			</button>
 		{/if}
-		<button class="kh-btn kh-btn--text" value="week"
-			>{byHand ? 'Hela veckan' : 'Föreslå igen'}</button
-		>
+		<button class="kh-btn kh-btn--text" value="week">
+			{byHand ? 'Hela veckan' : 'Föreslå igen'}
+		</button>
 	</form>
 </dialog>
 

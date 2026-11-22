@@ -257,9 +257,9 @@
 								/>
 							</span>
 							<span class="kh-row__text">
-								<span class="kh-row__title"
-									><span class="amount">{line.amount}</span>{line.text}</span
-								>
+								<span class="kh-row__title">
+									<span class="amount">{line.amount}</span>{line.text}
+								</span>
 							</span>
 						</label>
 					</li>
@@ -313,15 +313,17 @@
 					<strong>{timer.rung ? 'Klart!' : left(timer)}</strong>
 					<span>Steg {timer.number}</span>
 				</p>
-				{#if timer.rung}<span class="visually-hidden" role="alert"
-						>Timern för steg {timer.number} är klar</span
-					>{/if}
+				{#if timer.rung}<span class="visually-hidden" role="alert">
+						Timern för steg {timer.number} är klar
+					</span>{/if}
 				<button
 					type="button"
 					class="kh-btn kh-btn--secondary kh-btn--compact"
 					aria-label="{timer.rung ? 'Stäng' : 'Stoppa'} timern för steg {timer.number}"
-					onclick={() => stopTimer(timer.id)}>{timer.rung ? 'Stäng' : 'Stoppa'}</button
+					onclick={() => stopTimer(timer.id)}
 				>
+					{timer.rung ? 'Stäng' : 'Stoppa'}
+				</button>
 			</div>
 		{/each}
 	</div>

@@ -56,9 +56,9 @@
 		<button type="button" class="show" aria-label="{name}: {text || 'tom'}" onclick={onedit}>
 			{#if lunch}<span class="label">{MEAL_LABELS.lunch}</span>{/if}
 			<span class="text">
-				<span class={['dish ink', !text && 'empty', text && !isDish(text) && 'other']}
-					>{text || 'Skriv en rätt'}</span
-				>
+				<span class={['dish ink', !text && 'empty', text && !isDish(text) && 'other']}>
+					{text || 'Skriv en rätt'}
+				</span>
 				{#if meta && !offer}<span class="reason ink">{meta}</span>{/if}
 			</span>
 		</button>
@@ -76,9 +76,9 @@
 	{#if onvote}
 		<div class="vote"><VoteButton name={text} {vote} {onvote} /></div>
 	{:else if swapping}
-		<span class="swap waiting" role="status" aria-label="Byter {name}"
-			><kh-dots bouncing></kh-dots></span
-		>
+		<span class="swap waiting" role="status" aria-label="Byter {name}">
+			<kh-dots bouncing></kh-dots>
+		</span>
 	{:else if swappable}
 		<button
 			type="button"

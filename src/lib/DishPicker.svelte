@@ -85,21 +85,24 @@
 						class="kh-chip"
 						aria-pressed={category === sort.key}
 						onclick={() => (category = category === sort.key ? null : sort.key)}
-						>{sort.label}</button
 					>
+						{sort.label}
+					</button>
 				{/each}
 			</div>
 			<ul>
 				{#each shown as recipe (recipe.id)}
 					<li>
 						<button type="button" onclick={() => onpick(recipe.name)}>
-							<span class="name"
-								>{recipe.name}{#if recipe.vote === 'favorit'}<span
+							<span class="name">
+								{recipe.name}{#if recipe.vote === 'favorit'}<span
 										class="favourite"
 										role="img"
-										aria-label="Favorit"><Icon name="thumbUp" /></span
-									>{/if}</span
-							>
+										aria-label="Favorit"
+									>
+										<Icon name="thumbUp" />
+									</span>{/if}
+							</span>
 							<span class="meta">{sortLabel(recipe)} · {eatenText(recipe)}</span>
 						</button>
 					</li>

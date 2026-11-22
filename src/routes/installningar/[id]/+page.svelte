@@ -65,8 +65,10 @@
 				if (!question) return;
 				question.returnValue = '';
 				question.showModal();
-			}}>Radera {data.person.name}</button
+			}}
 		>
+			Radera {data.person.name}
+		</button>
 	</form>
 
 	<dialog bind:this={question} class="kh-dialog" aria-labelledby="delete-question" onclose={answer}>

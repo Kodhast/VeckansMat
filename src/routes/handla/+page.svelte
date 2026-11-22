@@ -240,22 +240,25 @@
 					: 'Claude kunde inte göra listan just nu'}, så här står ingredienserna rätt för rätt som
 				de står i recepten.
 			</p>
-			<button type="button" class="kh-btn kh-btn--outlined kh-btn--compact" onclick={make}
-				>Försök igen</button
-			>
+			<button type="button" class="kh-btn kh-btn--outlined kh-btn--compact" onclick={make}>
+				Försök igen
+			</button>
 		</section>
 	{:else if data.changed && notNow[data.weekStart] !== data.basis}
 		<section class="kh-card kh-card--tone notice changed">
 			<h2>Veckan har ändrats</h2>
 			<p>Det du skrivit själv och det som ligger i korgen står kvar när listan uppdateras.</p>
 			<div class="buttons">
-				<button type="button" class="kh-btn kh-btn--compact" onclick={make}>Uppdatera listan</button
-				>
+				<button type="button" class="kh-btn kh-btn--compact" onclick={make}>
+					Uppdatera listan
+				</button>
 				<button
 					type="button"
 					class="kh-btn kh-btn--text kh-btn--compact"
-					onclick={() => (notNow[data.weekStart] = data.basis)}>Inte nu</button
+					onclick={() => (notNow[data.weekStart] = data.basis)}
 				>
+					Inte nu
+				</button>
 			</div>
 		</section>
 	{/if}
@@ -336,8 +339,10 @@
 		<p class="hint only-name">
 			Bara namn, inget att lista:
 			{#each onlyName as dish, i (dish.id)}<a
-					href={resolve('/ratter/[id]', { id: String(dish.id) })}>{dish.name}</a
-				>{i < onlyName.length - 1 ? ', ' : '.'}
+					href={resolve('/ratter/[id]', { id: String(dish.id) })}
+				>
+					{dish.name}
+				</a>{i < onlyName.length - 1 ? ', ' : '.'}
 			{/each}
 		</p>
 	{/if}

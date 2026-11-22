@@ -166,9 +166,9 @@
 				<p class="source">
 					Från
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a page on another site -->
-					<a href={recipe.sourceUrl} target="_blank" rel="noreferrer"
-						>{URL.parse(recipe.sourceUrl)?.hostname ?? recipe.sourceUrl}</a
-					>
+					<a href={recipe.sourceUrl} target="_blank" rel="noreferrer">
+						{URL.parse(recipe.sourceUrl)?.hostname ?? recipe.sourceUrl}
+					</a>
 				</p>
 			{/if}
 		</FoldCard>
@@ -177,9 +177,9 @@
 		<FoldCard title="Veckor med rätten" count={recipe.weeks.length} open={onlyName}>
 			{#each recipe.weeks as week, i (i)}
 				<a class="kh-row" href="{resolve('/veckor')}#vecka-{week.menuId}">
-					<span class="kh-row__text"
-						><span class="kh-row__title">{weekName(week.weekStart)}</span></span
-					>
+					<span class="kh-row__text">
+						<span class="kh-row__title">{weekName(week.weekStart)}</span>
+					</span>
 					<span class="kh-row__subtitle">{MEAL_LABELS[week.meal]}</span>
 				</a>
 			{/each}
