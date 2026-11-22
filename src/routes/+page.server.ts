@@ -72,7 +72,17 @@ function listOf<T>(form: FormData, name: string, valid: (item: unknown) => item 
 	return Array.isArray(list) ? list.filter(valid).slice(0, 20) : [];
 }
 
-const isText = (item: unknown): item is string => typeof item === 'string' && item.length <= 100;
+/** As long as a dish Claude names; a whole pasted page is never a day's dish. */
+const DISH_MAX = 100;
+/** Room for a few sentences of wishes, not a page, since all of it goes to Claude. */
+const WISH_MAX = 500;
+
+/** A text from the form, cut to `max` characters. */
+const textOf = (form: FormData, name: string, max: number) =>
+	String(form.get(name) ?? '').slice(0, max);
+
+const isText = (item: unknown): item is string =>
+	typeof item === 'string' && item.length <= DISH_MAX;
 const isChoice = (item: unknown): item is Choice =>
 	isText((item as Choice)?.text) && isText((item as Choice)?.reason);
 
@@ -93,7 +103,7 @@ async function changed(weekStart: string) {
 export const actions: Actions = {
 	row: async ({ request }) => {
 		const form = await request.formData();
-		const text = String(form.get('text') ?? '');
+		const text = textOf(form, 'text', DISH_MAX);
 		const weekStart = weekOf(form);
 		await setWeekRow(env.DB, weekStart, { ...slotOf(form), text }, eatersOf(form));
 		return changed(weekStart);
@@ -113,7 +123,7 @@ export const actions: Actions = {
 	},
 	suggest: async ({ request }) => {
 		const form = await request.formData();
-		const wish = String(form.get('wish') ?? '');
+		const wish = textOf(form, 'wish', WISH_MAX);
 		const weekStart = weekOf(form);
 		try {
 			const wholeWeek = form.get('wholeWeek') === 'true';
@@ -141,8 +151,8 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const row = {
 			...slotOf(form),
-			text: String(form.get('text') ?? ''),
-			reason: String(form.get('reason') ?? '').slice(0, 100) || null,
+			text: textOf(form, 'text', DISH_MAX),
+			reason: textOf(form, 'reason', DISH_MAX) || null,
 			offer: offerOf(jsonOf(form, 'offer')),
 			alternatives: listOf(form, 'alternatives', isChoice).map(({ text, reason, offer }) => ({
 				text,
