@@ -10,10 +10,13 @@ import {
 	deleteShoppingItem,
 	getShoppingBasis,
 	getShoppingList,
+	resetShoppingItemAmount,
 	restoreShoppingItem,
 	saveShoppingList,
+	setShoppingItemAmount,
 	setShoppingItemChecked,
-	weekDishes
+	weekDishes,
+	type Line
 } from './shopping';
 
 let db: D1Database;
@@ -239,6 +242,113 @@ describe('the week shopping list', () => {
 		expect(shownItems(after)).toEqual(
 			shownItems(before.map((i) => (i.id === onion.id ? { ...i, checked: true } : i)))
 		);
+	});
+
+	it('takes an amount by hand, and puts back what Claude worked out', async () => {
+		await planWeek();
+		await saveShoppingList(db, WEEK, {
+			origin: 'claude',
+			items: [
+				{ text: 'Torsk', amount: '400 g', section: 'Kött och fisk', lines: [] },
+				{ text: 'Salt', amount: null, section: 'Finns kanske hemma', lines: [] }
+			],
+			basis: 'claude'
+		});
+		await addShoppingItem(db, WEEK, 'Kaffe');
+		const amounts = async () =>
+			(await getShoppingList(db, WEEK)).map(({ text, amount, amountEdited, amountBefore }) => ({
+				text,
+				amount,
+				amountEdited,
+				amountBefore
+			}));
+		const idOf = async (text: string) =>
+			(await getShoppingList(db, WEEK)).find((i) => i.text === text)!.id;
+
+		await setShoppingItemAmount(db, await idOf('Torsk'), ' 500  g ');
+		await setShoppingItemAmount(db, await idOf('Torsk'), '600 g');
+		await setShoppingItemAmount(db, await idOf('Salt'), '1 paket');
+		// What is written by hand is never a change to Claude's list; blank is no amount.
+		await setShoppingItemAmount(db, await idOf('Kaffe'), '2 förp');
+		expect(await amounts()).toEqual([
+			{ text: 'Torsk', amount: '600 g', amountEdited: true, amountBefore: '400 g' },
+			{ text: 'Salt', amount: '1 paket', amountEdited: true, amountBefore: null },
+			{ text: 'Kaffe', amount: '2 förp', amountEdited: false, amountBefore: null }
+		]);
+
+		// Back to Claude's amount, by hand or with the button.
+		await setShoppingItemAmount(db, await idOf('Torsk'), '400 g');
+		await resetShoppingItemAmount(db, await idOf('Salt'));
+		await setShoppingItemAmount(db, await idOf('Kaffe'), '   ');
+		expect(await amounts()).toEqual([
+			{ text: 'Torsk', amount: '400 g', amountEdited: false, amountBefore: null },
+			{ text: 'Salt', amount: null, amountEdited: false, amountBefore: null },
+			{ text: 'Kaffe', amount: null, amountEdited: false, amountBefore: null }
+		]);
+
+		await setShoppingItemAmount(db, await idOf('Torsk'), 'x'.repeat(60));
+		expect((await amounts())[0].amount).toBe('x'.repeat(40));
+	});
+
+	it('keeps an amount changed by hand when it is made again, while its dish is on the week', async () => {
+		await planWeek();
+		const claude = async (items: { text: string; amount: string; lines: Line[] }[]) =>
+			saveShoppingList(db, WEEK, {
+				origin: 'claude',
+				items: items.map((item) => ({ ...item, section: 'Skafferi' })),
+				basis: 'claude'
+			});
+		const list = async () =>
+			(await getShoppingList(db, WEEK)).map(({ text, amount, amountEdited }) => ({
+				text,
+				amount,
+				amountEdited
+			}));
+		await claude([
+			{ text: 'Torsk', amount: '400 g', lines: [await line('Fiskgratäng', 0)] },
+			{ text: 'Gul lök', amount: '1 st', lines: [await line('Linsgryta', 1)] }
+		]);
+		const [cod, onion] = await getShoppingList(db, WEEK);
+		await setShoppingItemAmount(db, cod.id, '500 g');
+		await setShoppingItemAmount(db, onion.id, '2 st');
+
+		// Claude's new items for the same lines are not added beside them, nor counted anew.
+		await claude([
+			{ text: 'Torskfilé', amount: '800 g', lines: [await line('Fiskgratäng', 0)] },
+			{ text: 'Lök', amount: '2 st', lines: [await line('Linsgryta', 1)] },
+			{ text: 'Grädde', amount: '2 dl', lines: [await line('Fiskgratäng', 1)] }
+		]);
+		expect(await list()).toEqual([
+			{ text: 'Torsk', amount: '500 g', amountEdited: true },
+			{ text: 'Gul lök', amount: '2 st', amountEdited: true },
+			{ text: 'Grädde', amount: '2 dl', amountEdited: false }
+		]);
+
+		// The lentil stew leaves the week, and its onion with it.
+		await setWeekRow(db, WEEK, dinner(2, 'Tacos'), []);
+		await setWeekRow(db, WEEK, dinner(4, 'Tacos'), []);
+		await makeFromRecipes();
+		expect((await list()).map((i) => i.text)).toEqual(['Torsk', '2 dl grädde']);
+	});
+
+	it('keeps a changed amount when an item is removed and put back', async () => {
+		await addShoppingItem(db, WEEK, 'Kaffe');
+		await saveShoppingList(db, WEEK, {
+			origin: 'claude',
+			items: [{ text: 'Torsk', amount: '400 g', section: 'Kött och fisk', lines: [] }],
+			basis: 'claude'
+		});
+		const cod = (await getShoppingList(db, WEEK)).find((i) => i.text === 'Torsk')!;
+		await setShoppingItemAmount(db, cod.id, '500 g');
+
+		const removed = await deleteShoppingItem(db, cod.id);
+		expect(removed).toMatchObject({ amount: '500 g', amountEdited: true, amountBefore: '400 g' });
+		await restoreShoppingItem(db, WEEK, removed!);
+		expect((await getShoppingList(db, WEEK)).find((i) => i.text === 'Torsk')).toMatchObject({
+			amount: '500 g',
+			amountEdited: true,
+			amountBefore: '400 g'
+		});
 	});
 
 	it('keeps who eats when the list starts the week', async () => {

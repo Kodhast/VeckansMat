@@ -3,21 +3,30 @@
 
 	// An item on the shopping list (web-ui's kh-check-row in a kh-swipe, as CheckRow and SwipeToHide
 	// in android-ui): tick it off, see which dishes it is for, or swipe it away to the left, which
-	// the snackbar can undo (android-ui #118); Ta bort also stands last in the row's popup.
+	// the snackbar can undo (android-ui #118); Ta bort also stands last in the row's popup. The
+	// amount is a button of its own, which opens the sheet to change it (#163).
 	let {
 		text,
 		amount,
+		amountEdited = false,
+		note = '',
 		dishes,
 		checked,
 		oncheck,
+		onamount,
 		onremove
 	}: {
 		text: string;
 		amount: string | null;
+		/** Whether the amount was changed by hand, which the pen beside it shows. */
+		amountEdited?: boolean;
+		/** What the popup says about the amount, such as what Claude worked out. */
+		note?: string;
 		/** The dishes it is for, as one line, or empty. */
 		dishes: string;
 		checked: boolean;
 		oncheck: (checked: boolean) => void;
+		onamount: () => void;
 		onremove: () => void;
 	} = $props();
 
@@ -80,11 +89,19 @@
 					<strong>Till</strong>
 					<span>{dishes}</span>
 				{/if}
+				{#if note}<span class="note">{note}</span>{/if}
 				<button type="button" class="remove" aria-label="Ta bort {text}" onclick={remove}>
 					<Icon name="delete" />Ta bort
 				</button>
 			</div>
-			{#if amount}<span class="amount">{amount}</span>{/if}
+			<button
+				type="button"
+				class={['amount', amountEdited && 'edited', !amount && 'none']}
+				aria-label="Ändra mängd: {text}"
+				onclick={onamount}
+			>
+				{#if amountEdited}<Icon name="edit" />{/if}{amount || '+ mängd'}
+			</button>
 		</div>
 	</kh-swipe>
 </li>
@@ -119,15 +136,50 @@
 		width: 1.125rem;
 	}
 
+	/* As tall as the row, so that a tap beside the text still changes the amount rather than
+	   ticking the item off. */
 	.amount {
 		min-width: 4rem;
-		padding-left: var(--kh-space-s);
-		text-align: right;
+		min-height: 48px;
+		margin: 0;
+		padding: 0 0 0 var(--kh-space-s);
+		border: 0;
+		background: transparent;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.25rem;
 		font: var(--kh-type-item-subtitle);
 		font-weight: 500;
 		color: var(--kh-on-surface-variant);
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.amount:focus-visible {
+		outline: 2px solid var(--kh-primary);
+		border-radius: var(--kh-radius-row);
+	}
+
+	.amount.none {
+		color: var(--kh-primary);
+		opacity: 0.8;
+	}
+
+	/* Changed by hand: a pen and a stronger tone. */
+	.amount.edited {
+		color: var(--kh-on-surface);
+		font-weight: 600;
+	}
+
+	.amount :global(svg) {
+		width: 0.875rem;
+		color: var(--kh-primary);
+	}
+
+	.popup .note {
+		margin-top: 0.25rem;
 	}
 
 	.popup {

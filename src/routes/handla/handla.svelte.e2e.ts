@@ -80,6 +80,57 @@ test('the week shopping list is made from the dishes and ticked off in the store
 	await expect(page.getByRole('checkbox', { name: 'Te' })).toBeVisible();
 });
 
+test('an amount is changed by hand, and stays when the list is made again', async ({ page }) => {
+	await open(page, '/handla');
+	const loads = countLoads(page);
+	const amount = page.getByRole('button', { name: 'Ändra mängd: Till fiskgratäng' });
+	await expect(amount).toHaveText('1 st');
+
+	// A tap on the amount opens the sheet and leaves the item unticked.
+	await amount.click();
+	const sheet = page.getByRole('dialog', { name: 'Till fiskgratäng' });
+	await expect(sheet.getByText('Claude räknade 1 st')).toBeVisible();
+	await expect(sheet.getByRole('button', { name: 'Mindre' })).toBeDisabled();
+	await sheet.getByRole('button', { name: 'Mer' }).click();
+	await expect(sheet.getByRole('textbox', { name: 'Mängd' })).toHaveValue('2 st');
+	await sheet.getByRole('button', { name: 'Spara' }).click();
+	await expect(sheet).toBeHidden();
+	await expect(amount).toHaveText('2 st');
+	await expect(amount).toHaveClass(/edited/);
+	await expect(page.getByRole('checkbox', { name: 'Till fiskgratäng' })).not.toBeChecked();
+
+	// An item without an amount gets one written in.
+	await page.getByRole('button', { name: 'Ändra mängd: Salt' }).click();
+	await page.getByRole('textbox', { name: 'Mängd' }).fill('1 paket');
+	await page.keyboard.press('Enter');
+	await expect(page.getByRole('button', { name: 'Ändra mängd: Salt' })).toHaveText('1 paket');
+	await saved(page);
+	expect(loads()).toBe(0);
+
+	// The popup says what Claude worked out.
+	await page.getByRole('button', { name: 'Till vilka rätter: Till fiskgratäng' }).click();
+	await expect(page.getByText('Ändrad för hand. Claude räknade 1 st.')).toBeVisible();
+	await page.keyboard.press('Escape');
+
+	// Made again, the changed items stay as they are, and Claude's are not added beside them.
+	await page.getByRole('button', { name: 'Gör om listan från veckan' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Claude gör listan' })).toBeHidden();
+	await expect(amount).toHaveText('2 st');
+	await expect(page.getByRole('checkbox', { name: 'Till fiskgratäng' })).toHaveCount(1);
+	await expect(page.getByRole('checkbox', { name: 'Salt' })).toHaveCount(1);
+
+	// And back to what Claude worked out.
+	await amount.click();
+	await sheet.getByRole('button', { name: 'Som Claude räknade' }).click();
+	await expect(amount).toHaveText('1 st');
+	await saved(page);
+	await reload(page);
+	await expect(page.getByRole('button', { name: 'Ändra mängd: Till fiskgratäng' })).toHaveText(
+		'1 st'
+	);
+	await expect(page.getByRole('button', { name: 'Ändra mängd: Salt' })).toHaveText('1 paket');
+});
+
 /**
  * Swipes the row of an item to the left with a finger, over `share` of its width; `pause` between
  * the moves makes it slow, since a quick flick takes the row away however short it is.

@@ -14,8 +14,12 @@ export interface ItemDish {
 export interface ShoppingItem {
 	id: number;
 	text: string;
-	/** How much, such as "400 g", when Claude has worked it out. */
+	/** How much, such as "400 g", when Claude has worked it out or it has been written in. */
 	amount: string | null;
+	/** Whether the amount was changed by hand, which keeps the item when the list is made again. */
+	amountEdited: boolean;
+	/** The amount before it was changed by hand, which "Som Claude räknade" puts back. */
+	amountBefore: string | null;
 	/** The heading the item is listed under: the store section, or the dish for a recipe's line. */
 	section: string | null;
 	/** The dishes whose lines the item covers, in the order its lines were given. */
@@ -76,7 +80,8 @@ export async function weekDishes(db: D1Database, weekStart: string): Promise<Wee
 export async function getShoppingList(db: D1Database, weekStart: string): Promise<ShoppingItem[]> {
 	const { results } = await db
 		.prepare(
-			`SELECT s.id, s.text, s.amount, s.section, s.origin, s.checked,
+			`SELECT s.id, s.text, s.amount, s.amount_edited AS amountEdited, s.amount_before AS amountBefore,
+			   s.section, s.origin, s.checked,
 			   (SELECT json_group_array(json_object('name', name, 'guessed', guessed)) FROM
 			     (SELECT r.name, r.ingredients_guessed AS guessed
 			      FROM shopping_item_source l JOIN recipe r ON r.id = l.recipe_id
@@ -85,10 +90,17 @@ export async function getShoppingList(db: D1Database, weekStart: string): Promis
 			 WHERE m.week_start = ? ORDER BY s.position, s.id`
 		)
 		.bind(weekStart)
-		.all<Omit<ShoppingItem, 'checked' | 'dishes'> & { checked: number; dishes: string }>();
+		.all<
+			Omit<ShoppingItem, 'checked' | 'amountEdited' | 'dishes'> & {
+				checked: number;
+				amountEdited: number;
+				dishes: string;
+			}
+		>();
 	return results.map((item) => ({
 		...item,
 		checked: Boolean(item.checked),
+		amountEdited: Boolean(item.amountEdited),
 		dishes: (JSON.parse(item.dishes) as { name: string; guessed: number }[]).map((dish) => ({
 			name: dish.name,
 			guessed: Boolean(dish.guessed)
@@ -127,9 +139,10 @@ export interface Guess {
 
 /**
  * Saves the week's list in place of the one before, with what it was made from (`basis`) and the
- * ingredients Claude guessed. What was written by hand and what is in the basket stays. An item
- * whose lines are all covered by items in the basket is not added again; an item that covers no
- * line is known by its text instead. All in one batch, so the basket is read as it is when the
+ * ingredients Claude guessed. What was written by hand and what is in the basket stays, and so does
+ * an item whose amount was changed by hand while a dish of its is on the week. An item whose lines
+ * are all covered by items in the basket or changed by hand is not added again; an item that covers
+ * no line is known by its text instead. All in one batch, so the basket is read as it is when the
  * list is written.
  */
 export async function saveShoppingList(
@@ -140,7 +153,13 @@ export async function saveShoppingList(
 	const menuId = await ensureMenu(db, weekStart);
 	await db.batch([
 		db
-			.prepare("DELETE FROM shopping_item WHERE menu_id = ? AND origin <> 'hand' AND checked = 0")
+			.prepare(
+				`DELETE FROM shopping_item AS s
+				 WHERE s.menu_id = ?1 AND s.origin <> 'hand' AND s.checked = 0 AND (s.amount_edited = 0
+				   OR EXISTS (SELECT 1 FROM shopping_item_source WHERE item_id = s.id) AND NOT EXISTS
+				     (SELECT 1 FROM shopping_item_source l JOIN menu_item i ON i.recipe_id = l.recipe_id
+				      WHERE l.item_id = s.id AND i.menu_id = ?1 AND i.weekday IS NOT NULL))`
+			)
 			.bind(menuId),
 		db.prepare('UPDATE menu SET shopping_basis = ? WHERE id = ?').bind(list.basis, menuId),
 		...(list.guesses ?? []).flatMap((g) =>
@@ -163,18 +182,20 @@ export async function saveShoppingList(
 				)
 				.bind(JSON.stringify(item.lines))
 		]),
-		// The items just added are the only ones left out of the basket that are not written by hand.
+		// The items just added are the only ones left out of the basket that are neither written by
+		// hand nor changed by hand; those that stay are kept, c below.
 		db
 			.prepare(
 				`DELETE FROM shopping_item AS s
-				 WHERE s.menu_id = ?1 AND s.checked = 0 AND s.origin <> 'hand' AND CASE
+				 WHERE s.menu_id = ?1 AND s.checked = 0 AND s.amount_edited = 0 AND s.origin <> 'hand' AND CASE
 				   WHEN EXISTS (SELECT 1 FROM shopping_item_source WHERE item_id = s.id)
 				   THEN NOT EXISTS (SELECT 1 FROM shopping_item_source l WHERE l.item_id = s.id AND NOT EXISTS
 				     (SELECT 1 FROM shopping_item_source b JOIN shopping_item c ON c.id = b.item_id
-				      WHERE c.menu_id = ?1 AND c.checked = 1 AND b.recipe_id = l.recipe_id
-				        AND b.position = l.position))
+				      WHERE c.menu_id = ?1 AND (c.checked = 1 OR c.amount_edited = 1)
+				        AND b.recipe_id = l.recipe_id AND b.position = l.position))
 				   ELSE EXISTS (SELECT 1 FROM shopping_item c
-				     WHERE c.menu_id = ?1 AND c.checked = 1 AND c.origin <> 'hand' AND lower(c.text) = lower(s.text))
+				     WHERE c.menu_id = ?1 AND (c.checked = 1 OR c.amount_edited = 1) AND c.origin <> 'hand'
+				       AND lower(c.text) = lower(s.text))
 				 END`
 			)
 			.bind(menuId)
@@ -209,11 +230,50 @@ export async function setShoppingItemChecked(
 		.run();
 }
 
+/** The longest amount that is kept; more is cut. */
+export const AMOUNT_MAX = 40;
+
+/**
+ * Gives an item another amount, written by hand; blank is no amount. An item that is not written
+ * by hand is marked as changed and keeps what it had before, unless the amount is that again.
+ */
+export async function setShoppingItemAmount(
+	db: D1Database,
+	id: number,
+	amount: string
+): Promise<void> {
+	const clean = cleanText(amount).slice(0, AMOUNT_MAX).trim() || null;
+	await db
+		.prepare(
+			`UPDATE shopping_item SET amount = ?2,
+			   amount_edited = (origin <> 'hand' AND ?2 IS NOT o.before),
+			   amount_before = CASE WHEN origin <> 'hand' AND ?2 IS NOT o.before THEN o.before END
+			 FROM (SELECT CASE WHEN amount_edited = 1 THEN amount_before ELSE amount END AS before
+			       FROM shopping_item WHERE id = ?1) AS o
+			 WHERE id = ?1`
+		)
+		.bind(id, clean)
+		.run();
+}
+
+/** Puts back the amount an item had before it was changed by hand. */
+export async function resetShoppingItemAmount(db: D1Database, id: number): Promise<void> {
+	await db
+		.prepare(
+			`UPDATE shopping_item SET amount = amount_before, amount_before = NULL, amount_edited = 0
+			 WHERE id = ? AND amount_edited = 1`
+		)
+		.bind(id)
+		.run();
+}
+
 /** An item as it was when it was removed, with the recipe lines it covered, to put it back. */
 export interface RemovedItem {
 	position: number;
 	text: string;
 	amount: string | null;
+	amountEdited: boolean;
+	amountBefore: string | null;
 	section: string | null;
 	origin: Origin;
 	checked: boolean;
@@ -230,15 +290,24 @@ export async function deleteShoppingItem(db: D1Database, id: number): Promise<Re
 		db
 			.prepare(
 				`DELETE FROM shopping_item WHERE id = ?
-				 RETURNING position, text, amount, section, origin, checked`
+				 RETURNING position, text, amount, amount_edited AS amountEdited, amount_before AS amountBefore,
+				   section, origin, checked`
 			)
 			.bind(id)
 	]);
 	const item = (
-		items.results as (Omit<RemovedItem, 'checked' | 'lines'> & { checked: number })[]
+		items.results as (Omit<RemovedItem, 'checked' | 'amountEdited' | 'lines'> & {
+			checked: number;
+			amountEdited: number;
+		})[]
 	)[0];
 	if (!item) return null;
-	return { ...item, checked: Boolean(item.checked), lines: lines.results as Line[] };
+	return {
+		...item,
+		checked: Boolean(item.checked),
+		amountEdited: Boolean(item.amountEdited),
+		lines: lines.results as Line[]
+	};
 }
 
 /** Puts a removed item back where it was on the week's list, with the lines of dishes that still exist. */
@@ -251,14 +320,17 @@ export async function restoreShoppingItem(
 	await db.batch([
 		db
 			.prepare(
-				`INSERT INTO shopping_item (menu_id, position, text, amount, section, origin, checked)
-				 VALUES (?, ?, ?, ?, ?, ?, ?)`
+				`INSERT INTO shopping_item
+				   (menu_id, position, text, amount, amount_edited, amount_before, section, origin, checked)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
 			.bind(
 				menuId,
 				item.position,
 				item.text,
 				item.amount,
+				item.amountEdited ? 1 : 0,
+				item.amountEdited ? item.amountBefore : null,
 				item.section,
 				item.origin,
 				item.checked ? 1 : 0
