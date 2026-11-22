@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.19.0
+
+- Mängden på en vara i Handla går att ändra: tryck på den, så öppnas ett ark med − och + och fritt fält (#163). En ändrad mängd har en penna och ligger kvar när listan görs om; "Som Claude räknade" sätter tillbaka Claudes. En vara utan mängd får "+ mängd".
+
 ## 0.18.3
 
 - Appikonen har appens Saffran: ljus saffransgul botten med veckobladets topp, besticket och prickarna i den mörka tonen. Statusfältet har appens bakgrundsfärg, ljus eller mörk efter telefonen.

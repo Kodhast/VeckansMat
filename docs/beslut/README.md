@@ -31,3 +31,4 @@ med `/adr` i Claude Code.
 | [0024](0024-plan-bara-for-storre-andringar.md)     | Plan bara för större ändringar                  | Beslutat                                          |
 | [0025](0025-arbetsflodets-stomme-fran-pluginen.md) | Arbetsflödets stomme från pluginen              | Beslutat                                          |
 | [0026](0026-web-ui-i-stallet-for-m3e.md)           | web-ui i stället för m3e                        | Beslutat                                          |
+| [0027](0027-mangd-for-hand.md)                     | En mängd ändrad för hand ligger kvar            | Beslutat                                          |

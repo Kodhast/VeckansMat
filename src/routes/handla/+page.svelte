@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { postAction, type Fields } from '#lib/actions.ts';
 	import AddItemSheet from '#lib/AddItemSheet.svelte';
+	import AmountSheet from '#lib/AmountSheet.svelte';
 	import { useToolbarAction } from '#lib/toolbar.svelte.ts';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
@@ -10,7 +11,7 @@
 	import Snackbar from '#lib/Snackbar.svelte';
 	import WeekHeader from '#lib/WeekHeader.svelte';
 	import type { RemovedItem, ShoppingItem } from '#lib/server/db/shopping.ts';
-	import { plural } from '#lib/names.ts';
+	import { cleanText, plural } from '#lib/names.ts';
 	import { BASKET_LOOK, HAND_LOOK, lookOf, sectionRank, type Look } from '#lib/shopping.ts';
 	import type { PageProps } from './$types';
 
@@ -39,6 +40,11 @@
 	// The latest item put in the basket, or removed, which the snackbar can undo.
 	let basketed = $state<ShoppingItem | null>(null);
 	let removed = $state<RemovedItem | null>(null);
+	// The item whose amount is being changed, and amounts saved but not yet answered.
+	let amountOf = $state<ShoppingItem | null>(null);
+	type Amount = Pick<ShoppingItem, 'amount' | 'amountEdited' | 'amountBefore'>;
+	let pendingAmounts = $state<Record<number, Amount & { change: number }>>({});
+	let amountChanges = 0;
 	// Items swiped away, hidden until the server has answered.
 	let removing = $state<Record<number, boolean>>({});
 	// Why Claude made no list, per week; then the list is the recipes' lines.
@@ -49,7 +55,21 @@
 	let listError = $derived(listErrors[data.weekStart]);
 
 	const isChecked = (item: ShoppingItem) => pendingChecked[item.id] ?? item.checked;
-	let shown = $derived(items.filter((item) => !removing[item.id]));
+	let shown = $derived(
+		items
+			.filter((item) => !removing[item.id])
+			.map((item) => {
+				const pending = pendingAmounts[item.id];
+				return pending
+					? {
+							...item,
+							amount: pending.amount,
+							amountEdited: pending.amountEdited,
+							amountBefore: pending.amountBefore
+						}
+					: item;
+			})
+	);
 	let toBuy = $derived(shown.filter((item) => !isChecked(item)));
 	let basket = $derived(shown.filter(isChecked));
 	let added = $derived(adding[data.weekStart] ?? []);
@@ -68,6 +88,15 @@
 	const dishesOf = (item: ShoppingItem) =>
 		item.dishes.map((dish) => dish.name).join(', ') +
 		(item.dishes.some((dish) => dish.guessed) ? ' · gissat' : '');
+
+	// What the popup says about an amount changed by hand.
+	function noteOf(item: ShoppingItem): string {
+		if (!item.amountEdited) return '';
+		const before = item.amountBefore ?? 'ingen mängd';
+		return item.origin === 'claude'
+			? `Ändrad för hand. Claude räknade ${before}.`
+			: `Ändrad för hand. Först ${before}.`;
+	}
 
 	// The cards folded away, which each phone remembers. The basket starts folded.
 	const BASKET = 'I korgen';
@@ -148,6 +177,43 @@
 		if (pendingChecked[item.id] === checked) delete pendingChecked[item.id];
 	}
 
+	// Shown at once as it will be saved, until the server answers with the list. A newer change to
+	// the same item stays until its own answer comes.
+	async function changeAmount(item: ShoppingItem, amount: Amount, action: string, fields: Fields) {
+		const change = ++amountChanges;
+		pendingAmounts[item.id] = { ...amount, change };
+		await post(action, { id: item.id, ...fields });
+		if (pendingAmounts[item.id]?.change === change) delete pendingAmounts[item.id];
+	}
+
+	function saveAmount(text: string) {
+		const item = amountOf;
+		amountOf = null;
+		if (!item) return;
+		const clean = cleanText(text);
+		if (clean === (item.amount ?? '')) return;
+		const before = item.amountEdited ? item.amountBefore : item.amount;
+		const edited = item.origin !== 'hand' && clean !== (before ?? '');
+		const amount = {
+			amount: clean || null,
+			amountEdited: edited,
+			amountBefore: edited ? before : null
+		};
+		changeAmount(item, amount, 'amount', { amount: clean });
+	}
+
+	function resetAmount() {
+		const item = amountOf;
+		amountOf = null;
+		if (!item) return;
+		changeAmount(
+			item,
+			{ amount: item.amountBefore, amountEdited: false, amountBefore: null },
+			'resetAmount',
+			{}
+		);
+	}
+
 	async function remove(item: ShoppingItem) {
 		removing[item.id] = true;
 		basketed = null;
@@ -181,9 +247,12 @@
 	<ShoppingRow
 		text={item.text}
 		amount={item.amount}
+		amountEdited={item.amountEdited}
+		note={noteOf(item)}
 		dishes={item.dishes.length ? dishesOf(item) : ''}
 		checked={isChecked(item)}
 		oncheck={(checked) => check(item, checked)}
+		onamount={() => (amountOf = item)}
 		onremove={() => remove(item)}
 	/>
 {/snippet}
@@ -344,6 +413,13 @@
 </main>
 
 <AddItemSheet bind:open={addOpen} onadd={add} />
+<AmountSheet
+	item={amountOf}
+	dishes={amountOf?.dishes.length ? dishesOf(amountOf) : ''}
+	onsave={saveAmount}
+	onreset={resetAmount}
+	onclose={() => (amountOf = null)}
+/>
 
 {#key basketed}
 	{#if basketed}

@@ -79,3 +79,33 @@ export function sectionRank(section: string | null): number {
 	const rank = (SECTIONS as readonly (string | null)[]).indexOf(section);
 	return rank < 0 ? SECTIONS.length : rank;
 }
+
+/** How much − and + change an amount: 100 for grams, a half for kilos and litres, else one. */
+function stepOf(unit: string): number {
+	const lower = unit.toLowerCase();
+	if (lower === 'g') return 100;
+	if (lower === 'kg' || lower === 'l') return 0.5;
+	return 1;
+}
+
+/**
+ * The amount with its first number one step up (`direction` 1) or down (−1), in the unit after it,
+ * written with a decimal comma. Down stops at one step, so that an item is never none; the amount
+ * is answered unchanged then, and when it has no number to change.
+ */
+export function stepAmount(amount: string, direction: 1 | -1): string {
+	const match = /(\d+(?:[.,]\d+)?)(\s*)(\p{L}*)/u.exec(amount);
+	if (!match) return amount;
+	const [whole, number, space, unit] = match;
+	const value = Number(number.replace(',', '.'));
+	const step = stepOf(unit);
+	if (direction < 0 && value <= step) return amount;
+	const next = Math.round(Math.max(step, value + direction * step) * 100) / 100;
+	return (
+		amount.slice(0, match.index) +
+		String(next).replace('.', ',') +
+		space +
+		unit +
+		amount.slice(match.index + whole.length)
+	);
+}
