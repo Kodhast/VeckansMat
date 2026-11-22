@@ -10,7 +10,7 @@ function worker(name: string, port: number, seeds: string[] = ['test/e2e-seed.sq
 		command: [
 			`npx wrangler d1 migrations apply DB --local ${persist}`,
 			...seeds.map((seed) => `npx wrangler d1 execute DB --local ${persist} --file ${seed}`),
-			`npx wrangler dev --port ${port} ${persist} --var ALLOW_LOCAL_FETCH:true ANTHROPIC_API_KEY:e2e CLAUDE_BASE_URL:http://localhost:4174/claude OFFER_SITE_URL:http://localhost:4174/butik`
+			`npx wrangler dev --port ${port} ${persist} --var ALLOW_LOCAL_FETCH:true SKIP_ACCESS:true ANTHROPIC_API_KEY:e2e CLAUDE_BASE_URL:http://localhost:4174/claude OFFER_SITE_URL:http://localhost:4174/butik`
 		].join(' && '),
 		port
 	};

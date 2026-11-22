@@ -4,8 +4,8 @@ import { saveIdentity } from '#lib/server/account.ts';
 import type { RequestHandler } from './$types';
 
 /** Saves the name and Google picture from the identity Access gave the browser. */
-export const POST: RequestHandler = async ({ request }) => {
-	const email = request.headers.get('cf-access-authenticated-user-email');
+export const POST: RequestHandler = async ({ request, locals }) => {
+	const email = locals.email;
 	if (!email) error(401);
 	const identity: unknown = await request.json().catch(() => null);
 	// Shown in Workers Logs, so a failure is no longer silent.
