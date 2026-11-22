@@ -61,9 +61,9 @@
 			maxlength="200"
 			onkeydown={(e) => e.key === 'Escape' && (open = false)}
 		/>
-		<button type="submit" class="kh-icon-btn kh-icon-btn--tonal" aria-label="Lägg till"
-			><Icon name="add" /></button
-		>
+		<button type="submit" class="kh-icon-btn kh-icon-btn--tonal" aria-label="Lägg till">
+			<Icon name="add" />
+		</button>
 		<button type="button" class="kh-icon-btn" aria-label="Stäng" onclick={() => (open = false)}>
 			<Icon name="close" />
 		</button>

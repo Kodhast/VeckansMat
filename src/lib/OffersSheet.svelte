@@ -103,15 +103,20 @@
 							type="button"
 							class="kh-chip"
 							aria-pressed={!chain}
-							onclick={() => (chain = null)}>Alla {total}</button
+							onclick={() => (chain = null)}
 						>
+							Alla {total}
+						</button>
 						{#each counts as [key, n] (key)}
 							<button
 								type="button"
 								class="kh-chip"
 								aria-pressed={chain === key}
-								onclick={() => (chain = chain === key ? null : key)}>{chainLabel(key)} {n}</button
+								onclick={() => (chain = chain === key ? null : key)}
 							>
+								{chainLabel(key)}
+								{n}
+							</button>
 						{/each}
 					</div>
 				{/if}

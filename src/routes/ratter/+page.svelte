@@ -168,8 +168,10 @@
 					role="radio"
 					aria-checked={order === value}
 					tabindex={order === value ? 0 : -1}
-					onclick={() => (order = value)}>{label}</button
+					onclick={() => (order = value)}
 				>
+					{label}
+				</button>
 			{/each}
 		</div>
 	{:else if shown.length > 0 && !exact && !link}
@@ -192,17 +194,21 @@
 						<li>
 							<a class="kh-row" href={resolve('/ratter/[id]', { id: String(recipe.id) })}>
 								<span class="kh-row__text">
-									<span class="kh-row__title"
-										>{recipe.name}{#if recipe.vote === 'favorit'}<span
+									<span class="kh-row__title">
+										{recipe.name}{#if recipe.vote === 'favorit'}<span
 												class="vote"
 												role="img"
-												aria-label="Favorit"><Icon name="thumbUp" /></span
-											>{:else if recipe.vote === 'aldrig'}<span
+												aria-label="Favorit"
+											>
+												<Icon name="thumbUp" />
+											</span>{:else if recipe.vote === 'aldrig'}<span
 												class="vote never"
 												role="img"
-												aria-label="Aldrig mer"><Icon name="thumbUp" /></span
-											>{/if}</span
-									>
+												aria-label="Aldrig mer"
+											>
+												<Icon name="thumbUp" />
+											</span>{/if}
+									</span>
 									<span class="kh-row__subtitle meta">{eatenText(recipe)}</span>
 								</span>
 								<span class="kh-chevron"></span>

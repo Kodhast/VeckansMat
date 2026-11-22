@@ -89,16 +89,18 @@
 			{#each usual as recipe (recipe.id)}
 				<li>
 					<button type="button" onpointerdown={keepFocus} onclick={() => onwrite(recipe.name)}>
-						<span class="name"
-							>{recipe.name}{#if recipe.vote === 'favorit'}<span
+						<span class="name">
+							{recipe.name}{#if recipe.vote === 'favorit'}<span
 									class="favourite"
 									role="img"
-									aria-label="Favorit"><Icon name="thumbUp" /></span
-								>{/if}</span
-						>
-						<span class="meta"
-							>{usualText({ ...recipe, favourite: recipe.vote === 'favorit' }, rest)}</span
-						>
+									aria-label="Favorit"
+								>
+									<Icon name="thumbUp" />
+								</span>{/if}
+						</span>
+						<span class="meta">
+							{usualText({ ...recipe, favourite: recipe.vote === 'favorit' }, rest)}
+						</span>
 					</button>
 				</li>
 			{/each}
@@ -134,9 +136,14 @@
 	{/if}
 	<div class="kh-chips choices">
 		{#each NOT_DISHES as other (other)}
-			<button type="button" class="kh-chip" onpointerdown={keepFocus} onclick={() => onwrite(other)}
-				>{other}</button
+			<button
+				type="button"
+				class="kh-chip"
+				onpointerdown={keepFocus}
+				onclick={() => onwrite(other)}
 			>
+				{other}
+			</button>
 		{/each}
 	</div>
 </div>
