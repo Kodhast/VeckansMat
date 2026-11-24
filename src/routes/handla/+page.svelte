@@ -366,7 +366,7 @@
 			<h2>Veckan har ändrats</h2>
 			<p>Det du skrivit själv och det som ligger i korgen står kvar när listan uppdateras.</p>
 			<div class="buttons">
-				<button type="button" class="kh-btn kh-btn--compact" onclick={make}>
+				<button type="button" class="kh-btn kh-btn--primary kh-btn--compact" onclick={make}>
 					Uppdatera listan
 				</button>
 				<button
@@ -405,7 +405,7 @@
 						behövas och skriver in det i rätten.
 					{/if}
 				</p>
-				<button type="button" class="kh-btn" onclick={make}>
+				<button type="button" class="kh-btn kh-btn--primary" onclick={make}>
 					<Icon name="suggest" />Gör inköpslistan
 				</button>
 			{/if}

@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open, reload } from '../../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // The made-up data comes from test/e2e-seed.sql. Tests that change it use names of their own,
 // that sort after the seeded dishes.

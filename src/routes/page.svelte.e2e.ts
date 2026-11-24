@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { fromAccountMenu, open } from '../../test/e2e';
 import pkg from '../../package.json' with { type: 'json' };
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 test('start page shows the week', async ({ page }) => {
 	await page.goto('/');

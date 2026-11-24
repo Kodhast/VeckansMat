@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { fromAccountMenu, open, reload, saved } from '../../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // Made-up people only. The tests share one database, so they run in order.
 test.describe.configure({ mode: 'serial' });

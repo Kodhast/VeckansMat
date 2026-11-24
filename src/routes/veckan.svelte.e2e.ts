@@ -1,6 +1,10 @@
 import { expect, test, type Locator } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { countLoads, open, reload, saved, writeDay } from '../../test/e2e';
 import { mondayOf, shownWeek, swedishToday } from '../lib/weeks';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // The made-up dishes come from test/e2e-seed.sql. Veckan shows this week or the next, so the
 // tests do not depend on which day they run.

@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { countLoads, open, reload, saved, swipeAt, writeDay } from '../../../test/e2e';
 import { shownWeek, swedishToday } from '../../lib/weeks';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // Has a Worker of its own in playwright.config.ts, since it writes the same weeks as the tests of
 // Veckan. The made-up dishes come from test/e2e-seed.sql.

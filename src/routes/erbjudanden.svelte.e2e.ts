@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open } from '../../test/e2e';
 import { mondayOf, swedishToday } from '../lib/weeks';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // This week, empty, whatever day the tests run; from Wednesday Veckan shows the next by itself.
 const thisWeek = `/?vecka=${mondayOf(swedishToday())}`;

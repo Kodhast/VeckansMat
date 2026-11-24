@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open, read, SITE } from '../../../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // Photos and text are read by the stand-in for Claude in test/e2e-recipe-site.mjs.
 

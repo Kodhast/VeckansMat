@@ -114,7 +114,10 @@
 			<p class="meta">Sort och bas gissade av Claude. Ändra under Redigera.</p>
 		{/if}
 		<div class="actions">
-			<a class="kh-btn cook" href={resolve('/ratter/[id]/laga', { id: String(recipe.id) })}>
+			<a
+				class="kh-btn kh-btn--primary cook"
+				href={resolve('/ratter/[id]/laga', { id: String(recipe.id) })}
+			>
 				<Icon name="cook" />Laga maten
 			</a>
 			<VoteButton name={recipe.name} {vote} onvote={setVote} />

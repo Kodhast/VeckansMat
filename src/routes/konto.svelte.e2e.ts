@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { accountButton as account, fromAccountMenu, open } from '../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // Made-up accounts. Access sends the email in a header, and the browser asks its identity endpoint
 // for the name and picture, which the test answers. The picture comes from the made-up site in

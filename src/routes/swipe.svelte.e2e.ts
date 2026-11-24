@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open, swipeAt } from '../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // A swipe sideways on a main view goes to the view next to it in the menu (#105).
 

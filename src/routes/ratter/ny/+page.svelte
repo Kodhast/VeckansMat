@@ -235,7 +235,7 @@
 			{#if shrinking}
 				<p class="muted small" role="status">Gör bilderna mindre …</p>
 			{/if}
-			<button class="kh-btn">Läs in receptet</button>
+			<button class="kh-btn kh-btn--primary">Läs in receptet</button>
 		{/if}
 	</form>
 

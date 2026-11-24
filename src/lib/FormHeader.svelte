@@ -19,7 +19,7 @@
 	<h1 class="kh-topbar__title"><kh-dots></kh-dots><span>{title}</span></h1>
 	{#if save}
 		<div class="kh-topbar__actions">
-			<button class="kh-btn kh-btn--compact">Spara</button>
+			<button class="kh-btn kh-btn--primary kh-btn--compact">Spara</button>
 		</div>
 	{/if}
 </header>
