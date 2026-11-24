@@ -40,7 +40,9 @@ byggda är facit; mallen uppdateras när en ny komponent registreras.
 
 ## Visa och vänta
 
-- Granska först med `/ux-granskning` och rätta 🔴. Nämn kvarvarande 🟡.
+- Gå igenom kompositionsreglerna D-1–D-9 i `android:designregler` och granska med
+  `android:ux-granskning` (avsnittet Webbapparna); rätta 🔴 och nämn kvarvarande 🟡.
+- Säg vilken som är vyns primära handling (D-3) och fokuspunkt (D-4).
 - Ge länken och en eller två meningar om vad som visas och vilka val som är öppna.
 - **Skriv ingen kod innan ägaren godkänt.** Ändringar görs i samma canvas.
 - Länken läggs i issuet under **Design**.
