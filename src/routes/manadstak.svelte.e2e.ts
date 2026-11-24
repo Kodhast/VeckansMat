@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open, read, writeDay } from '../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // Spends the month's cap for Claude, so playwright.config.ts gives it a Worker of its own.
 test.describe.configure({ mode: 'serial' });

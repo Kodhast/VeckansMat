@@ -11,7 +11,7 @@
 <section class="kh-card kh-card--tone">
 	<p>{text}</p>
 	<div class="actions">
-		<a class="kh-btn" href="{resolve('/ratter/ny')}?till={recipeId}">
+		<a class="kh-btn kh-btn--outlined" href="{resolve('/ratter/ny')}?till={recipeId}">
 			<Icon name="camera" />Hämta receptet
 		</a>
 		<a class="kh-btn kh-btn--text" href={resolve('/ratter/[id]/redigera', { id })}>

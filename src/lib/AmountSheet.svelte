@@ -103,7 +103,7 @@
 				Behåll {shown?.amount ?? 'ingen mängd'}
 			</button>
 			{#if shown?.amountSuggested}
-				<button type="button" class="kh-btn save" onclick={ontake}>
+				<button type="button" class="kh-btn kh-btn--primary save" onclick={ontake}>
 					Ta Claudes {shown.amountSuggested}
 				</button>
 			{/if}
@@ -119,7 +119,7 @@
 			{fromClaude ? 'Som Claude räknade' : 'Som förut'}
 		</button>
 	{/if}
-	<button type="submit" form="amount-form" class="kh-btn save">Spara</button>
+	<button type="submit" form="amount-form" class="kh-btn kh-btn--primary save">Spara</button>
 {/snippet}
 
 <style>

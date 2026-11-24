@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open } from '../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // A Worker of its own with no dishes and no weeks, so the lists show what they say when empty.
 

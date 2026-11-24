@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { assertSinglePrimaryAction } from '@kodhast/web-ui/prov.js';
 import { open, read, SITE } from '../../../../test/e2e';
+
+// D-3: högst en primär handling (fylld knapp eller huvudknappen) synlig när varje prov är klart.
+test.afterEach(async ({ page }) => assertSinglePrimaryAction(page));
 
 // The dishes come from test/e2e-seed.sql; new ones have names that sort after the seeded
 // dishes. Pages without JSON-LD are read by Claude, so those tests are in claude.svelte.e2e.ts.
