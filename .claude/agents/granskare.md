@@ -29,7 +29,8 @@ Du granskar ändringar i VeckansMat. Du ändrar aldrig filer och kör bara läsa
   i SvelteKit, web-ui eller `src/lib`.
 - **Process:** ny GUI utan godkänd mockup under **Design** i issuet, eller utan skärmdumpar i
   PR:en (`/mockup`). Ändrade texter i gränssnittet: reglerna under "UX-texter på svenska" i
-  `/ux-granskning`, ingen hel designkritik.
+  `android:ux-granskning`, ingen hel designkritik. Fler än en primär handling i samma vy bryter
+  `android:designregler` D-3.
 - **Version:** ändrar diffen appen (`src/`, `static/`, `package.json`-beroenden,
   `wrangler.jsonc`) ska den höja versionen enligt `/release` och skriva raden i `CHANGELOG.md`.
   Saknad höjning eller rad är ❌; en ren dokument-, test-, CI- eller `.claude/`-ändring som höjer

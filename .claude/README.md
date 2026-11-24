@@ -13,7 +13,6 @@ och [0010](../docs/beslut/0010-skills-och-agenter.md). Ett prov
 | `release`                   | Versionshöjning i PR:en och release till skarp drift | Egen, efter claude-android                                   |
 | `adr`                       | Nytt beslut i `docs/beslut/`                         | Egen                                                         |
 | `mockup`                    | Före ny eller ändrad GUI                             | Egen, efter claude-android                                   |
-| `ux-granskning`             | Granska en vy, mockup eller UX-text                  | Egen, efter claude-android                                   |
 | `svelte-core-bestpractices` | Svelte 5: runes, reaktivitet, händelser              | Svelte, oförändrad                                           |
 | `svelte-code-writer`        | Svelte-dokumentation och `svelte-autofixer` via CLI  | Svelte, oförändrad                                           |
 | `wrangler`                  | wrangler: lokalt, D1, R2, deploy                     | Cloudflare, oförändrad                                       |
@@ -29,6 +28,9 @@ och [0010](../docs/beslut/0010-skills-och-agenter.md). Ett prov
 
 Oförändrade kopior har `SOURCE.md` och `LICENSE.txt` i sin katalog och formateras inte av
 Prettier (`.prettierignore`), så att de kan bytas mot en ny version rakt av.
+
+Granskning av en vy och kompositionsreglerna kommer från pluginen: `android:ux-granskning`
+(avsnittet Webbapparna) och `android:designregler` (claude-android #100).
 
 ## Hooks
 
