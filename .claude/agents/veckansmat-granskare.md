@@ -1,5 +1,5 @@
 ---
-name: granskare
+name: veckansmat-granskare
 description: Granskar en diff eller gren i VeckansMat mot reglerna i CLAUDE.md, besluten i docs/beslut/ och mockup-regeln, och rapporterar i en kort tabell som går att läsa i telefonen. Använd före varje PR (/implement-issue → Granska), när någon ber om granskning, eller efter en större ändring. Läser bara – ändrar aldrig filer.
 tools: Read, Grep, Glob, Bash
 model: opus

@@ -1,5 +1,5 @@
 ---
-name: ci-doktor
+name: veckansmat-ci-doktor
 description: Diagnostiserar en röd GitHub Actions-körning i VeckansMat – läser loggar och testrapporter och föreslår en konkret fix utan att pusha. Använd när en PR får rött CI eller någon frågar varför CI är rött. Håller stora loggar borta från huvudsessionen.
 tools: Read, Grep, Glob, Bash, mcp__github__actions_list, mcp__github__actions_get, mcp__github__get_job_logs, mcp__github__get_check_run, mcp__github__pull_request_read
 model: sonnet

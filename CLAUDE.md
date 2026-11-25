@@ -53,5 +53,5 @@ gränssnitt, `docs/`, commit-meddelanden, issues och PR:er.
   och `CHANGELOG.md` får en rad (`/release`). Skarp drift bara vid release.
 - Utseendet från `@kodhast/web-ui` och temat i `src/lib/tema.css` (beslut 0026).
 - `/refine-issue` planerar, `/implement-issue` genomför, `/mockup` före ny GUI.
-  Före push: `/simplify`, agenten `granskare`, `/code-review`. Allt: `.claude/README.md`.
+  Före push: `/simplify`, agenten `veckansmat-granskare`, `/code-review`. Allt: `.claude/README.md`.
 - Lärdomar om hur Claude styrs i projektet skrivs i `docs/ai-styrning.md`.

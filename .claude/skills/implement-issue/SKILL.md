@@ -55,13 +55,13 @@ kostnad i PR:en, från `evals/costs.jsonl`. Se `evals/README.md`.
 ## Granska – VeckansMat
 
 Före granskarens runda: `/simplify` – mindre kod som gör samma jobb. Granskaren är agenten
-**`granskare`**. `/code-review` körs också när diffen rör Claude-anrop. Kör kontrollerna en sista
+**`veckansmat-granskare`**. `/code-review` körs också när diffen rör Claude-anrop. Kör kontrollerna en sista
 gång efter sista rundan.
 
 ## PR och bevakning – VeckansMat
 
 - PR-texten säger också avvikelser från issuet.
-- Rött CI → agenten **`ci-doktor`**.
+- Rött CI → agenten **`veckansmat-ci-doktor`**.
 - Workflowen **Konflikter** sätter etiketten `konflikt` och tar bort den vid den push som löser
   konflikten; etiketten betyder samma sak som `mergeable_state` `dirty`.
 - Merga bara när **Plan godkänd** också är grön.
