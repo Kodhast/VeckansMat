@@ -29,7 +29,7 @@ Varje PR som ändrar appen höjer versionen i samma ändring, så att ingen rele
   den innan versionen höjs, och igen om `main` rört sig före merge. Andra trådar kan ha höjt
   under tiden (se Konflikter i `/implement-issue`).
 
-Agenten `granskare` kontrollerar höjningen.
+Agenten `veckansmat-granskare` kontrollerar höjningen.
 
 ## Hur en release går till
 

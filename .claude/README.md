@@ -20,11 +20,11 @@ och [0010](../docs/beslut/0010-skills-och-agenter.md). Ett prov
 
 ## Agenter
 
-| Agent                | När                                              | Modell     | Källa                      |
-| -------------------- | ------------------------------------------------ | ---------- | -------------------------- |
-| `granskare`          | Före varje PR: diffen mot reglerna, ändrar inget | sessionens | Egen, efter claude-android |
-| `ci-doktor`          | Rött CI: läser loggarna, föreslår en fix         | Sonnet     | Egen, efter claude-android |
-| `svelte-file-editor` | Skriva och kontrollera `.svelte`-filer           | sessionens | Svelte, oförändrad         |
+| Agent                  | När                                              | Modell     | Källa                      |
+| ---------------------- | ------------------------------------------------ | ---------- | -------------------------- |
+| `veckansmat-granskare` | Före varje PR: diffen mot reglerna, ändrar inget | sessionens | Egen, efter claude-android |
+| `veckansmat-ci-doktor` | Rött CI: läser loggarna, föreslår en fix         | Sonnet     | Egen, efter claude-android |
+| `svelte-file-editor`   | Skriva och kontrollera `.svelte`-filer           | sessionens | Svelte, oförändrad         |
 
 Oförändrade kopior har `SOURCE.md` och `LICENSE.txt` i sin katalog och formateras inte av
 Prettier (`.prettierignore`), så att de kan bytas mot en ny version rakt av.
@@ -48,7 +48,8 @@ Projekttrådar startar i `/home/user`, ovanför repot, och läser då inte `.cla
 - **Skills och agenter** hittar Claude Code själv i `.claude/`. Skillsen heter `<namn>`, eller
   `VeckansMat:<namn>` när ett annat repo i tråden har en skill med samma namn. Agenter får
   aldrig prefix; en agent som finns i flera repon ska heta `<repo>-<namn>` (regeln i
-  claude-android). `granskare` och `ci-doktor` är unika i dag.
+  claude-android). Därför heter granskaren och CI-doktorn `veckansmat-granskare` och
+  `veckansmat-ci-doktor`: Tidrapporten har agenter med samma grundnamn.
 - **Hookarna** bär miljöns setup-skript (`scripts/repo-plugins.mjs` i `Kodhast/claude-android`)
   i pluginen `veckansmat`. De körs bara när händelsen rör repot: `verify-before-push` för en
   push i VeckansMat, `plan-approved` för en PR mot VeckansMat (claude-android #38), och
