@@ -7,10 +7,28 @@
 	// The account in the header, and its menu under it (android-ui's AccountMenu, variant B in #102):
 	// the same first level as in every Kodhäst app. Logga ut only when Access has logged someone in.
 	let account = $derived(page.data.account);
-	let label = $derived(account?.name ? `Konto, ${account.name}` : 'Konto');
+
+	// The dot on the avatar, as in every Kodhäst app (web-ui 3.1.0): logged in and online green, logged in
+	// without a connection a grey hollow ring, not logged in none. Online is the browser's own notion.
+	let online = $state(true);
+	$effect(() => {
+		const update = () => (online = navigator.onLine);
+		update();
+		addEventListener('online', update);
+		addEventListener('offline', update);
+		return () => {
+			removeEventListener('online', update);
+			removeEventListener('offline', update);
+		};
+	});
+	let dot = $derived(account ? (online ? ' kh-avatar--online' : ' kh-avatar--offline') : '');
+	let label = $derived(
+		(account?.name ? `Konto, ${account.name}` : 'Konto') +
+			(account && !online ? ', ingen anslutning' : '')
+	);
 </script>
 
-<button class="kh-avatar" type="button" popovertarget="kontomeny" aria-label={label}>
+<button class={`kh-avatar${dot}`} type="button" popovertarget="kontomeny" aria-label={label}>
 	<span class="kh-avatar__circle"><Avatar /></span>
 </button>
 

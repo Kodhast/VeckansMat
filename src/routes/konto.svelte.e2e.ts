@@ -93,6 +93,17 @@ test.describe('without a Google picture', () => {
 		await expect(account(page)).toHaveText('S');
 		expect(asked()).toBe(1);
 	});
+
+	test('logged in: a green dot online, a grey hollow ring offline', async ({ page, context }) => {
+		await identity(page, { email: SAM, name: 'Sam Exempel' });
+		await open(page, '/ratter');
+		await expect(account(page)).toHaveClass(/\bkh-avatar--online\b/);
+		await context.setOffline(true);
+		await expect(account(page)).toHaveClass(/\bkh-avatar--offline\b/);
+		await expect(account(page)).toHaveAccessibleName('Konto, Sam Exempel, ingen anslutning');
+		await context.setOffline(false);
+		await expect(account(page)).toHaveClass(/\bkh-avatar--online\b/);
+	});
 });
 
 test.describe('when Access does not answer', () => {
@@ -112,6 +123,8 @@ test('without Access the menu still leads to Inställningar, and has no Logga ut
 }) => {
 	await open(page, '/veckor');
 	await expect(account(page)).toHaveAccessibleName('Konto');
+	// Not logged in: no dot.
+	await expect(account(page)).not.toHaveClass(/kh-avatar--(online|offline)/);
 	await account(page).click();
 	await expect(page.getByRole('menuitem', { name: 'Logga ut' })).toHaveCount(0);
 	await page.keyboard.press('Escape');
