@@ -28,7 +28,7 @@
 		"types": "wrangler types"
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^1.10.0",
+		"@anthropic-ai/sdk": "^1.13.0",
 		"@cloudflare/puppeteer": "^1.4.0",
 		"@kodhast/web-ui": "github:Kodhast/web-ui#v3.1.0"
 	},
@@ -37,7 +37,7 @@
 		"@playwright/test": "^1.65.1",
 		"@sveltejs/adapter-cloudflare": "^8.0.0",
 		"@sveltejs/kit": "^3.4.0",
-		"@sveltejs/vite-plugin-svelte": "^7.2.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.2",
 		"@types/node": "^24",
 		"eslint": "^10.15.0",
 		"eslint-config-prettier": "^10.1.8",
@@ -48,10 +48,10 @@
 		"svelte": "^5.58.0",
 		"svelte-check": "^4.7.8",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.73.0",
+		"typescript-eslint": "^8.74.0",
 		"vite": "^8.3.8",
 		"vitest": "^5.1.1",
-		"wrangler": "^4.166.0"
+		"wrangler": "^4.167.0"
 	},
 	"imports": {
 		"#lib/*": "./src/lib/*"
