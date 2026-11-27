@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.21.2
+
+- Avataren uppe till höger har en grön plupp när du är inloggad och appen har nät, och en grå ihålig ring när nätet saknas – samma som i alla Kodhäst-appar (web-ui 3.1.0).
+
 ## 0.21.1
 
 - En fylld knapp per vy (Kodhast/android-ui#128, web-ui 2.0.0): knappar som inte är vyns huvudhandling är tonade i stället för fyllda – Föreslå veckan, Hämta receptet och Lägg till i sökningen bland rätterna, som delar vyn med plusknappen; Hämta receptet på en rätt utan recept är konturerad bredvid Laga maten. Proven fäller nu en vy med två fyllda knappar.
