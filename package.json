@@ -30,7 +30,7 @@
 	"dependencies": {
 		"@anthropic-ai/sdk": "^1.10.0",
 		"@cloudflare/puppeteer": "^1.4.0",
-		"@kodhast/web-ui": "github:Kodhast/web-ui#v3.1.0"
+		"@kodhast/web-ui": "github:Kodhast/web-ui#v1.13.1"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
