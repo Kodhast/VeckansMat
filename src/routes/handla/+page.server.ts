@@ -8,9 +8,11 @@ import {
 	getShoppingList,
 	keepShoppingItemAmount,
 	resetShoppingItemAmount,
+	resetShoppingItemText,
 	restoreShoppingItem,
 	setShoppingItemAmount,
 	setShoppingItemChecked,
+	setShoppingItemText,
 	takeSuggestedAmount,
 	type Line,
 	type RemovedItem
@@ -64,6 +66,7 @@ function removedOf(form: FormData): RemovedItem {
 		const textOrNull = (v: unknown) => (typeof v === 'string' ? v.slice(0, 200) : null);
 		// A hand item has no amount of Claude's to go back to (ADR 0027).
 		const amountEdited = item.amountEdited === true && item.origin !== 'hand';
+		const textBefore = item.origin === 'hand' ? null : textOrNull(item.textBefore)?.trim() || null;
 		if (
 			text &&
 			Number.isInteger(item.position) &&
@@ -72,6 +75,7 @@ function removedOf(form: FormData): RemovedItem {
 		) {
 			return {
 				text,
+				textBefore,
 				position: item.position,
 				amount: textOrNull(item.amount),
 				amountEdited,
@@ -116,11 +120,23 @@ export const actions: Actions = {
 		await setShoppingItemChecked(env.DB, idOf(form), form.get('checked') === 'true');
 		return { items: await getShoppingList(env.DB, weekStart) };
 	},
-	// An amount written in; blank is none.
-	amount: async ({ request }) => {
+	// The item changed in the sheet: a text written in (#208), blank changes nothing; an amount
+	// written in (#163), blank is none. Only the fields sent are changed.
+	edit: async ({ request }) => {
 		const form = await request.formData();
 		const weekStart = weekOf(form);
-		await setShoppingItemAmount(env.DB, idOf(form), String(form.get('amount') ?? '').slice(0, 200));
+		const id = idOf(form);
+		const text = form.get('text');
+		const amount = form.get('amount');
+		if (text !== null) await setShoppingItemText(env.DB, id, String(text));
+		if (amount !== null) await setShoppingItemAmount(env.DB, id, String(amount).slice(0, 200));
+		return { items: await getShoppingList(env.DB, weekStart) };
+	},
+	// "Som Claude skrev": the text before it was changed.
+	resetText: async ({ request }) => {
+		const form = await request.formData();
+		const weekStart = weekOf(form);
+		await resetShoppingItemText(env.DB, idOf(form));
 		return { items: await getShoppingList(env.DB, weekStart) };
 	},
 	// "Som Claude räknade": the amount before it was changed.

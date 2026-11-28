@@ -43,3 +43,18 @@ gamla mängden kvar. Ägaren valde 2026-11-22 att varan frågar.
   den ändrade frågar den inte heller. En vara vars alla rätter är borta tas bort som förut.
 - Varor utan rader jämförs med Å, Ä och Ö vikta till gemener; SQLites `lower()` gör det bara för
   ASCII.
+
+## Tillägg 2026-11-28: texten kan också ändras (#208)
+
+Ägaren godkände planen i #208 2026-11-28 ("Kör"; svaren på frågorna 13:18).
+
+- En varas text kan ändras i samma ark som mängden ("Ändra varan"), som också öppnas från Ändra i
+  radens infobubbla. Det Claude eller receptet skrev sparas i `text_before`; "Som Claude skrev"
+  sätter tillbaka det, och skriver man in samma text igen är varan inte längre ändrad.
+- **Ändrad för hand** betyder nu ändrad text _eller_ ändrad mängd. Allt ovan om att ligga kvar, ta
+  in Claudes nya vara för samma rader och fråga när rätterna ändrats gäller båda lika. En vara med
+  bara ändrad text frågar alltså om mängden när rätterna ändras, som en vara med ändrad mängd; en
+  regel i stället för två (ägarens val).
+- En vara utan rader känns igen på texten Claude skrev (`coalesce(text_before, text)`), så att
+  Claudes vara med den gamla texten inte läggs till bredvid den ändrade.
+- Det man skrivit själv får aldrig märkningen, som med mängden.

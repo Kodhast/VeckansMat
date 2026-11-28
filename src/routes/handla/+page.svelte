@@ -4,10 +4,10 @@
 	import type { Fields } from '#lib/actions.ts';
 	import { Answers } from '#lib/answers.svelte.ts';
 	import AddItemSheet from '#lib/AddItemSheet.svelte';
-	import AmountSheet from '#lib/AmountSheet.svelte';
 	import { useToolbarAction } from '#lib/toolbar.svelte.ts';
 	import FoldCard from '#lib/FoldCard.svelte';
 	import Icon from '#lib/Icon.svelte';
+	import ItemSheet from '#lib/ItemSheet.svelte';
 	import ShoppingRow from '#lib/ShoppingRow.svelte';
 	import Snackbar from '#lib/Snackbar.svelte';
 	import WeekHeader from '#lib/WeekHeader.svelte';
@@ -47,14 +47,22 @@
 	// The latest item put in the basket, or removed, which the snackbar can undo.
 	let basketed = $state<ShoppingItem | null>(null);
 	let removed = $state<RemovedItem | null>(null);
-	// The item whose amount is being changed, and amounts saved but not yet answered.
-	let amountOf = $state<ShoppingItem | null>(null);
-	type Amount = Pick<
-		ShoppingItem,
-		'amount' | 'amountEdited' | 'amountBefore' | 'amountChange' | 'amountSuggested'
+	// The item being changed, the field the sheet opens at, and changes saved but not yet answered.
+	let editing = $state<{ item: ShoppingItem; focus: 'text' | 'amount' } | null>(null);
+	type Edit = Partial<
+		Pick<
+			ShoppingItem,
+			| 'text'
+			| 'textBefore'
+			| 'amount'
+			| 'amountEdited'
+			| 'amountBefore'
+			| 'amountChange'
+			| 'amountSuggested'
+		>
 	>;
-	let pendingAmounts = $state<Record<number, Amount & { change: number }>>({});
-	let amountChanges = 0;
+	let pendingEdits = $state<Record<number, Edit & { change: number }>>({});
+	let editCount = 0;
 	// Items swiped away, hidden until the server has answered.
 	let removing = $state<Record<number, boolean>>({});
 	// Why Claude made no list, per week; then the list is the recipes' lines.
@@ -69,7 +77,7 @@
 		items
 			.filter((item) => !removing[item.id])
 			.map((item) => {
-				const pending = pendingAmounts[item.id];
+				const pending = pendingEdits[item.id];
 				return pending ? { ...item, ...pending } : item;
 			})
 	);
@@ -92,13 +100,16 @@
 		item.dishes.map((dish) => dish.name).join(', ') +
 		(item.dishes.some((dish) => dish.guessed) ? ' · gissat' : '');
 
-	// What the popup says about an amount changed by hand.
+	// What the popup says about a text or an amount changed by hand.
 	function noteOf(item: ShoppingItem): string {
-		if (!item.amountEdited) return '';
-		const before = item.amountBefore ?? 'ingen mängd';
-		return item.origin === 'claude'
-			? `Ändrad för hand. Claude räknade ${before}.`
-			: `Ändrad för hand. Först ${before}.`;
+		const claude = item.origin === 'claude';
+		const notes = [
+			item.textBefore &&
+				(claude ? `Claude skrev ${item.textBefore}.` : `Först ${item.textBefore}.`),
+			item.amountEdited &&
+				(claude ? 'Claude räknade ' : 'Först ') + `${item.amountBefore ?? 'ingen mängd'}.`
+		].filter(Boolean);
+		return notes.length ? `Ändrad för hand. ${notes.join(' ')}` : '';
 	}
 
 	// The cards folded away, which each phone remembers. The basket starts folded.
@@ -172,57 +183,84 @@
 
 	// Shown at once as it will be saved, until the server answers with the list. A newer change to
 	// the same item stays until its own answer comes.
-	async function changeAmount(item: ShoppingItem, amount: Amount, action: string, fields: Fields) {
-		const change = ++amountChanges;
-		pendingAmounts[item.id] = { ...amount, change };
-		await post(action, { id: item.id, ...fields });
-		if (pendingAmounts[item.id]?.change === change) delete pendingAmounts[item.id];
+	async function change(item: ShoppingItem, edit: Edit, send: () => Promise<unknown>) {
+		const count = ++editCount;
+		pendingEdits[item.id] = { ...pendingEdits[item.id], ...edit, change: count };
+		await send();
+		if (pendingEdits[item.id]?.change === count) delete pendingEdits[item.id];
 	}
 
-	function saveAmount(text: string) {
-		const item = amountOf;
-		amountOf = null;
-		if (!item) return;
-		const clean = cleanText(text);
-		if (clean === (item.amount ?? '')) return;
-		const before = item.amountEdited ? item.amountBefore : item.amount;
-		const edited = item.origin !== 'hand' && clean !== (before ?? '');
-		const amount = {
-			amount: clean || null,
-			amountEdited: edited,
-			amountBefore: edited ? before : null,
-			...ASKS_NO_MORE
-		};
-		changeAmount(item, amount, 'amount', { amount: clean });
+	// Takes the item out of the sheet, which closes it.
+	function edited() {
+		const item = editing?.item;
+		editing = null;
+		return item;
 	}
 
-	function resetAmount() {
-		const item = amountOf;
-		amountOf = null;
+	function save(text: string, amount: string) {
+		const item = edited();
 		if (!item) return;
-		changeAmount(
-			item,
-			{ amount: item.amountBefore, amountEdited: false, amountBefore: null, ...ASKS_NO_MORE },
-			'resetAmount',
-			{}
+		const newText = cleanText(text);
+		const newAmount = cleanText(amount);
+		const textChanged = !!newText && newText !== item.text;
+		const amountChanged = newAmount !== (item.amount ?? '');
+		if (!textChanged && !amountChanged) return;
+		const edit: Edit = {};
+		if (textChanged) {
+			const before = item.textBefore ?? item.text;
+			edit.text = newText;
+			edit.textBefore = item.origin !== 'hand' && newText !== before ? before : null;
+		}
+		if (amountChanged) {
+			const before = item.amountEdited ? item.amountBefore : item.amount;
+			const changed = item.origin !== 'hand' && newAmount !== (before ?? '');
+			Object.assign(edit, {
+				amount: newAmount || null,
+				amountEdited: changed,
+				amountBefore: changed ? before : null,
+				...ASKS_NO_MORE
+			});
+		}
+		change(item, edit, () =>
+			post('edit', {
+				id: item.id,
+				...(textChanged && { text: newText }),
+				...(amountChanged && { amount: newAmount })
+			})
 		);
 	}
 
-	// The dishes changed since the amount was changed by hand (#197): keep it, or take Claude's.
+	function resetText() {
+		const item = edited();
+		if (!item?.textBefore) return;
+		change(item, { text: item.textBefore, textBefore: null }, () =>
+			post('resetText', { id: item.id })
+		);
+	}
+
+	function resetAmount() {
+		const item = edited();
+		if (!item) return;
+		change(
+			item,
+			{ amount: item.amountBefore, amountEdited: false, amountBefore: null, ...ASKS_NO_MORE },
+			() => post('resetAmount', { id: item.id })
+		);
+	}
+
+	// The dishes changed since the item was changed by hand (#197): keep its amount, or take Claude's.
 	const ASKS_NO_MORE = { amountChange: null, amountSuggested: null };
 	function keepAmount() {
-		const item = amountOf;
-		amountOf = null;
+		const item = edited();
 		if (!item) return;
-		changeAmount(item, { ...item, ...ASKS_NO_MORE }, 'keepAmount', {});
+		change(item, ASKS_NO_MORE, () => post('keepAmount', { id: item.id }));
 	}
 
 	function takeSuggested() {
-		const item = amountOf;
-		amountOf = null;
+		const item = edited();
 		if (!item?.amountSuggested) return;
 		const amount = { amount: item.amountSuggested, amountEdited: false, amountBefore: null };
-		changeAmount(item, { ...amount, ...ASKS_NO_MORE }, 'takeSuggested', {});
+		change(item, { ...amount, ...ASKS_NO_MORE }, () => post('takeSuggested', { id: item.id }));
 	}
 
 	// How many items ask, and how many did when the notice was closed, per week on this phone; it
@@ -279,6 +317,7 @@
 {#snippet row(item: ShoppingItem)}
 	<ShoppingRow
 		text={item.text}
+		textEdited={!!item.textBefore}
 		amount={item.amount}
 		amountEdited={item.amountEdited}
 		question={questionOf(item)}
@@ -286,7 +325,8 @@
 		dishes={item.dishes.length ? dishesOf(item) : ''}
 		checked={isChecked(item)}
 		oncheck={(checked) => check(item, checked)}
-		onamount={() => (amountOf = item)}
+		onamount={() => (editing = { item, focus: 'amount' })}
+		onedit={() => (editing = { item, focus: 'text' })}
 		onremove={() => remove(item)}
 	/>
 {/snippet}
@@ -466,14 +506,16 @@
 </main>
 
 <AddItemSheet bind:open={addOpen} onadd={add} />
-<AmountSheet
-	item={amountOf}
-	dishes={amountOf?.dishes.length ? dishesOf(amountOf) : ''}
-	onsave={saveAmount}
+<ItemSheet
+	item={editing?.item ?? null}
+	focus={editing?.focus}
+	dishes={editing?.item.dishes.length ? dishesOf(editing.item) : ''}
+	onsave={save}
 	onreset={resetAmount}
+	onresettext={resetText}
 	onkeep={keepAmount}
 	ontake={takeSuggested}
-	onclose={() => (amountOf = null)}
+	onclose={() => (editing = null)}
 />
 
 {#key basketed}

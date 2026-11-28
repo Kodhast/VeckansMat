@@ -17,6 +17,8 @@ export interface ItemDish {
 export interface ShoppingItem {
 	id: number;
 	text: string;
+	/** The text before it was changed by hand, which "Som Claude skrev" puts back; null while unchanged. */
+	textBefore: string | null;
 	/** How much, such as "400 g", when Claude has worked it out or it has been written in. */
 	amount: string | null;
 	/** Whether the amount was changed by hand, which keeps the item when the list is made again. */
@@ -90,7 +92,7 @@ export async function weekDishes(db: D1Database, weekStart: string): Promise<Wee
 export async function getShoppingList(db: D1Database, weekStart: string): Promise<ShoppingItem[]> {
 	const { results } = await db
 		.prepare(
-			`SELECT s.id, s.text, s.amount, s.amount_edited AS amountEdited, s.amount_before AS amountBefore,
+			`SELECT s.id, s.text, s.text_before AS textBefore, s.amount, s.amount_edited AS amountEdited, s.amount_before AS amountBefore,
 			   s.amount_change AS amountChange, s.amount_suggested AS amountSuggested, s.section, s.origin, s.checked,
 			   (SELECT json_group_array(json_object('name', name, 'guessed', guessed)) FROM
 			     (SELECT r.name, r.ingredients_guessed AS guessed
@@ -151,13 +153,15 @@ export interface Guess {
 const lowerSv = (column: string) =>
 	`lower(replace(replace(replace(${column}, 'Å', 'å'), 'Ä', 'ä'), 'Ö', 'ö'))`;
 
+/** Whether the item's amount or text was changed by hand (ADR 0027), which keeps it. */
+const byHand = (s: string) => `(${s}.amount_edited = 1 OR ${s}.text_before IS NOT NULL)`;
 /** Items changed by hand that are not in the basket, which ask when their dishes change. */
 const edited = (e: string) =>
-	`${e}.menu_id = ?1 AND ${e}.checked = 0 AND ${e}.amount_edited = 1 AND ${e}.origin <> 'hand'`;
+	`${e}.menu_id = ?1 AND ${e}.checked = 0 AND ${byHand(e)} AND ${e}.origin <> 'hand'`;
 /** Items just added for the new list: the only ones out of the basket that are neither written by
  * hand nor changed by hand, once the old ones are deleted. */
 const fresh = (n: string) =>
-	`${n}.menu_id = ?1 AND ${n}.checked = 0 AND ${n}.amount_edited = 0 AND ${n}.origin <> 'hand'`;
+	`${n}.menu_id = ?1 AND ${n}.checked = 0 AND NOT ${byHand(n)} AND ${n}.origin <> 'hand'`;
 /** Whether item n covers a line of item e. */
 const shares = (n: string, e: string) => `EXISTS (SELECT 1 FROM shopping_item_source a
 	JOIN shopping_item_source b ON b.recipe_id = a.recipe_id AND b.position = a.position
@@ -186,10 +190,11 @@ const ON_WEEK = (recipe: string) =>
 /**
  * Saves the week's list in place of the one before, with what it was made from (`basis`) and the
  * ingredients Claude guessed. What was written by hand and what is in the basket stays. An item
- * whose amount was changed by hand stays while a dish of its is on the week; when its dishes have
+ * whose amount or text was changed by hand stays while a dish of its is on the week; when its dishes have
  * changed since, it takes in Claude's new item for the same lines and asks whether to keep its
  * amount or take Claude's (#197). An item whose lines are all covered by items in the basket or
- * changed by hand is not added again; an item that covers no line is known by its text instead.
+ * changed by hand is not added again; an item that covers no line is known by its text instead,
+ * as Claude wrote it.
  * All in one batch, so the basket is read as it is when the list is written.
  */
 export async function saveShoppingList(
@@ -202,7 +207,7 @@ export async function saveShoppingList(
 		db
 			.prepare(
 				`DELETE FROM shopping_item AS s
-				 WHERE s.menu_id = ?1 AND s.origin <> 'hand' AND s.checked = 0 AND (s.amount_edited = 0
+				 WHERE s.menu_id = ?1 AND s.origin <> 'hand' AND s.checked = 0 AND (NOT ${byHand('s')}
 				   OR EXISTS (SELECT 1 FROM shopping_item_source WHERE item_id = s.id) AND NOT EXISTS
 				     (SELECT 1 FROM shopping_item_source l JOIN menu_item i ON i.recipe_id = l.recipe_id
 				      WHERE l.item_id = s.id AND i.menu_id = ?1 AND i.weekday IS NOT NULL))`
@@ -284,15 +289,15 @@ export async function saveShoppingList(
 		db
 			.prepare(
 				`DELETE FROM shopping_item AS s
-				 WHERE s.menu_id = ?1 AND s.checked = 0 AND s.amount_edited = 0 AND s.origin <> 'hand' AND CASE
+				 WHERE ${fresh('s')} AND CASE
 				   WHEN EXISTS (SELECT 1 FROM shopping_item_source WHERE item_id = s.id)
 				   THEN NOT EXISTS (SELECT 1 FROM shopping_item_source l WHERE l.item_id = s.id AND NOT EXISTS
 				     (SELECT 1 FROM shopping_item_source b JOIN shopping_item c ON c.id = b.item_id
-				      WHERE c.menu_id = ?1 AND (c.checked = 1 OR c.amount_edited = 1)
+				      WHERE c.menu_id = ?1 AND (c.checked = 1 OR ${byHand('c')})
 				        AND b.recipe_id = l.recipe_id AND b.position = l.position))
 				   ELSE EXISTS (SELECT 1 FROM shopping_item c
-				     WHERE c.menu_id = ?1 AND (c.checked = 1 OR c.amount_edited = 1) AND c.origin <> 'hand'
-				       AND ${lowerSv('c.text')} = ${lowerSv('s.text')})
+				     WHERE c.menu_id = ?1 AND (c.checked = 1 OR ${byHand('c')}) AND c.origin <> 'hand'
+				       AND ${lowerSv('coalesce(c.text_before, c.text)')} = ${lowerSv('s.text')})
 				 END`
 			)
 			.bind(menuId)
@@ -353,6 +358,37 @@ export async function setShoppingItemAmount(
 		.run();
 }
 
+/** The longest text an item keeps; more is cut. */
+export const TEXT_MAX = 200;
+
+/**
+ * Gives an item another text, written by hand; blank changes nothing. An item that is not written
+ * by hand is marked as changed and keeps the text it had before, unless the text is that again.
+ */
+export async function setShoppingItemText(db: D1Database, id: number, text: string): Promise<void> {
+	const clean = cleanText(text).slice(0, TEXT_MAX).trim();
+	if (!clean) return;
+	await db
+		.prepare(
+			`UPDATE shopping_item SET text = ?2,
+			   text_before = CASE WHEN origin <> 'hand' AND ?2 <> o.before THEN o.before END
+			 FROM (SELECT coalesce(text_before, text) AS before FROM shopping_item WHERE id = ?1) AS o
+			 WHERE id = ?1`
+		)
+		.bind(id, clean)
+		.run();
+}
+
+/** Puts back the text an item had before it was changed by hand. */
+export async function resetShoppingItemText(db: D1Database, id: number): Promise<void> {
+	await db
+		.prepare(
+			'UPDATE shopping_item SET text = text_before, text_before = NULL WHERE id = ? AND text_before IS NOT NULL'
+		)
+		.bind(id)
+		.run();
+}
+
 /** Puts back the amount an item had before it was changed by hand. */
 export async function resetShoppingItemAmount(db: D1Database, id: number): Promise<void> {
 	await db
@@ -401,6 +437,7 @@ export async function takeSuggestedAmount(
 export interface RemovedItem {
 	position: number;
 	text: string;
+	textBefore: string | null;
 	amount: string | null;
 	amountEdited: boolean;
 	amountBefore: string | null;
@@ -420,7 +457,7 @@ export async function deleteShoppingItem(db: D1Database, id: number): Promise<Re
 		db
 			.prepare(
 				`DELETE FROM shopping_item WHERE id = ?
-				 RETURNING position, text, amount, amount_edited AS amountEdited, amount_before AS amountBefore,
+				 RETURNING position, text, text_before AS textBefore, amount, amount_edited AS amountEdited, amount_before AS amountBefore,
 				   section, origin, checked`
 			)
 			.bind(id)
@@ -451,13 +488,15 @@ export async function restoreShoppingItem(
 		db
 			.prepare(
 				`INSERT INTO shopping_item
-				   (menu_id, position, text, amount, amount_edited, amount_before, section, origin, checked)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				   (menu_id, position, text, text_before, amount, amount_edited, amount_before, section, origin,
+				    checked)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 			)
 			.bind(
 				menuId,
 				item.position,
 				item.text,
+				item.textBefore,
 				item.amount,
 				item.amountEdited ? 1 : 0,
 				item.amountEdited ? item.amountBefore : null,

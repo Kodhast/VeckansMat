@@ -12,10 +12,12 @@ import {
 	getShoppingList,
 	keepShoppingItemAmount,
 	resetShoppingItemAmount,
+	resetShoppingItemText,
 	restoreShoppingItem,
 	saveShoppingList,
 	setShoppingItemAmount,
 	setShoppingItemChecked,
+	setShoppingItemText,
 	takeSuggestedAmount,
 	weekDishes,
 	type Line
@@ -519,6 +521,139 @@ describe('the week shopping list', () => {
 			amount: '500 g',
 			amountEdited: true,
 			amountBefore: '400 g'
+		});
+	});
+
+	it('takes a text by hand, and puts back what Claude wrote', async () => {
+		await saveShoppingList(db, WEEK, {
+			origin: 'claude',
+			items: [{ text: 'Krossade tomater', amount: '2 burkar', section: 'Skafferi', lines: [] }],
+			basis: 'claude'
+		});
+		await addShoppingItem(db, WEEK, 'Kaffe');
+		const [tomatoes, coffee] = await getShoppingList(db, WEEK);
+		const texts = async () =>
+			(await getShoppingList(db, WEEK)).map(({ text, textBefore }) => ({ text, textBefore }));
+
+		await setShoppingItemText(db, tomatoes.id, ' Krossade  tomater, eko ');
+		await setShoppingItemText(db, tomatoes.id, 'Passerade tomater');
+		// What is written by hand is never a change to Claude's list; blank changes nothing.
+		await setShoppingItemText(db, coffee.id, 'Bryggkaffe');
+		await setShoppingItemText(db, coffee.id, '   ');
+		expect(await texts()).toEqual([
+			{ text: 'Passerade tomater', textBefore: 'Krossade tomater' },
+			{ text: 'Bryggkaffe', textBefore: null }
+		]);
+
+		// Back to Claude's text, by hand or with the button.
+		await setShoppingItemText(db, tomatoes.id, 'Krossade tomater');
+		expect((await texts())[0]).toEqual({ text: 'Krossade tomater', textBefore: null });
+		await setShoppingItemText(db, tomatoes.id, 'Tomater');
+		await resetShoppingItemText(db, tomatoes.id);
+		expect((await texts())[0]).toEqual({ text: 'Krossade tomater', textBefore: null });
+
+		await setShoppingItemText(db, tomatoes.id, 'x'.repeat(250));
+		expect((await texts())[0].text).toBe('x'.repeat(200));
+	});
+
+	it('keeps a text changed by hand when it is made again, and asks about its amount as a changed amount does', async () => {
+		await planWeek();
+		await giveIngredients(db, 'Pannkakor', ['3 dl vetemjöl', '1 gul lök']);
+		const claude = async (items: { text: string; amount: string; lines: Line[] }[]) =>
+			saveShoppingList(db, WEEK, {
+				origin: 'claude',
+				items: items.map((item) => ({ ...item, section: 'Frukt och grönt' })),
+				basis: 'claude'
+			});
+		const list = async () =>
+			(await getShoppingList(db, WEEK)).map(
+				({ text, textBefore, amount, amountEdited, amountChange, amountSuggested }) => ({
+					text,
+					textBefore,
+					amount,
+					amountEdited,
+					amountChange,
+					amountSuggested
+				})
+			);
+		await claude([
+			{ text: 'Gul lök', amount: '1 st', lines: [await line('Linsgryta', 1)] },
+			{ text: 'Torsk', amount: '400 g', lines: [await line('Fiskgratäng', 0)] }
+		]);
+		const [onion] = await getShoppingList(db, WEEK);
+		await setShoppingItemText(db, onion.id, 'Schalottenlök');
+		const shallot = {
+			text: 'Schalottenlök',
+			textBefore: 'Gul lök',
+			amountEdited: false,
+			amountChange: null,
+			amountSuggested: null
+		};
+
+		// Claude's new item for the same line is not added beside it.
+		await claude([
+			{ text: 'Gul lök', amount: '1 st', lines: [await line('Linsgryta', 1)] },
+			{ text: 'Torsk', amount: '400 g', lines: [await line('Fiskgratäng', 0)] }
+		]);
+		expect(await list()).toEqual([
+			{ ...shallot, amount: '1 st' },
+			{
+				text: 'Torsk',
+				textBefore: null,
+				amount: '400 g',
+				amountEdited: false,
+				amountChange: null,
+				amountSuggested: null
+			}
+		]);
+
+		// The pancakes have onion too: it asks about its amount, as since #197.
+		await claude([
+			{
+				text: 'Gul lök',
+				amount: '2 st',
+				lines: [await line('Linsgryta', 1), await line('Pannkakor', 1)]
+			}
+		]);
+		expect(await list()).toEqual([
+			{ ...shallot, amount: '1 st', amountChange: 'added', amountSuggested: '2 st' }
+		]);
+
+		// The lentil stew and the pancakes leave the week, and the shallot with them.
+		for (const day of [2, 4]) await setWeekRow(db, WEEK, dinner(day, 'Tacos'), []);
+		await setWeekRow(db, WEEK, { weekday: 6, meal: 'lunch', text: 'Tacos' }, []);
+		await claude([]);
+		expect(await list()).toEqual([]);
+	});
+
+	it('knows an item without lines by the text Claude wrote when its text is changed', async () => {
+		const make = () =>
+			saveShoppingList(db, WEEK, {
+				origin: 'claude',
+				items: [{ text: 'Ägg', amount: '12 st', section: 'Mejeri och ägg', lines: [] }],
+				basis: 'claude'
+			});
+		await make();
+		await setShoppingItemText(db, (await getShoppingList(db, WEEK))[0].id, 'Ägg, frigående');
+		await make();
+		expect((await getShoppingList(db, WEEK)).map((i) => i.text)).toEqual(['Ägg, frigående']);
+	});
+
+	it('keeps a changed text when an item is removed and put back', async () => {
+		await saveShoppingList(db, WEEK, {
+			origin: 'claude',
+			items: [{ text: 'Torsk', amount: '400 g', section: 'Kött och fisk', lines: [] }],
+			basis: 'claude'
+		});
+		const [cod] = await getShoppingList(db, WEEK);
+		await setShoppingItemText(db, cod.id, 'Sej');
+
+		const removed = await deleteShoppingItem(db, cod.id);
+		expect(removed).toMatchObject({ text: 'Sej', textBefore: 'Torsk' });
+		await restoreShoppingItem(db, WEEK, removed!);
+		expect((await getShoppingList(db, WEEK))[0]).toMatchObject({
+			text: 'Sej',
+			textBefore: 'Torsk'
 		});
 	});
 

@@ -93,7 +93,7 @@ test('an amount is changed by hand, and stays when the list is made again', asyn
 
 	// A tap on the amount opens the sheet and leaves the item unticked.
 	await amount.click();
-	const sheet = page.getByRole('dialog', { name: 'Till fiskgratäng' });
+	const sheet = page.getByRole('dialog', { name: 'Ändra varan' });
 	await expect(sheet.getByText('Claude räknade 1 st')).toBeVisible();
 	await expect(sheet.getByRole('button', { name: 'Mindre' })).toBeDisabled();
 	await sheet.getByRole('button', { name: 'Mer' }).click();
@@ -134,6 +134,47 @@ test('an amount is changed by hand, and stays when the list is made again', asyn
 		'1 st'
 	);
 	await expect(page.getByRole('button', { name: 'Ändra mängd: Salt' })).toHaveText('1 paket');
+});
+
+test('a text is changed by hand, and stays when the list is made again', async ({ page }) => {
+	await open(page, '/handla');
+	const loads = countLoads(page);
+
+	// Ändra in the popup opens the sheet at the text, and leaves the item unticked.
+	await page.getByRole('button', { name: /^(Till vilka rätter: |Mer om )Salt$/ }).click();
+	await page.getByRole('button', { name: 'Ändra Salt', exact: true }).click();
+	const sheet = page.getByRole('dialog', { name: 'Ändra varan' });
+	const text = sheet.getByRole('textbox', { name: 'Vara' });
+	await expect(text).toBeFocused();
+	await text.fill('Flingsalt');
+	await sheet.getByRole('button', { name: 'Spara' }).click();
+	await expect(sheet).toBeHidden();
+	const flakes = page.getByRole('checkbox', { name: 'Flingsalt' });
+	await expect(flakes).not.toBeChecked();
+	await expect(page.getByRole('img', { name: 'ändrad för hand' })).toHaveCount(1);
+	await saved(page);
+	expect(loads()).toBe(0);
+
+	// The popup says what Claude wrote.
+	await page.getByRole('button', { name: /^(Till vilka rätter: |Mer om )Flingsalt$/ }).click();
+	await expect(page.getByText(/Claude skrev Salt\./)).toBeVisible();
+	await page.keyboard.press('Escape');
+
+	// Made again, the changed item stays, and Claude's Salt is not added beside it.
+	await page.getByRole('button', { name: 'Gör om listan från veckan' }).click();
+	await expect(page.getByRole('status').filter({ hasText: 'Claude gör listan' })).toBeHidden();
+	await expect(flakes).toHaveCount(1);
+	await expect(page.getByRole('checkbox', { name: 'Salt', exact: true })).toHaveCount(0);
+
+	// And back to what Claude wrote, from the amount.
+	await page.getByRole('button', { name: 'Ändra mängd: Flingsalt' }).click();
+	await expect(sheet.getByRole('textbox', { name: 'Mängd' })).toBeFocused();
+	await sheet.getByRole('button', { name: 'Som Claude skrev' }).click();
+	await expect(page.getByRole('checkbox', { name: 'Salt', exact: true })).toBeVisible();
+	await saved(page);
+	await reload(page);
+	await expect(page.getByRole('checkbox', { name: 'Salt', exact: true })).toBeVisible();
+	await expect(flakes).toHaveCount(0);
 });
 
 /**
@@ -256,7 +297,7 @@ test('an amount changed by hand asks when a new dish needs the item too', async 
 	const amount = page.getByRole('button', { name: 'Ändra mängd: Purjolök' });
 	await expect(amount).toHaveText('1 st');
 	await amount.click();
-	const sheet = page.getByRole('dialog', { name: 'Purjolök' });
+	const sheet = page.getByRole('dialog', { name: 'Ändra varan' });
 	await sheet.getByRole('textbox', { name: 'Mängd' }).fill('3 st');
 	await sheet.getByRole('button', { name: 'Spara' }).click();
 	await expect(amount).toHaveText('3 st');

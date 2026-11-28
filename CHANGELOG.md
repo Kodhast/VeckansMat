@@ -3,6 +3,10 @@
 Det hushållet märker, en rad per ändring. Versionen höjs i PR:en som gör ändringen
 (se `.claude/skills/release/SKILL.md`).
 
+## 0.22.0
+
+- En vara på inköpslistan kan få en annan text (#208): Ändra i varans infobubbla öppnar samma ark som mängden, nu med fältet Vara överst. En ändrad text får en penna efter namnet, infobubblan säger vad Claude skrev, och "Som Claude skrev" tar tillbaka den. Varan ligger kvar när listan görs om, precis som en vara med ändrad mängd. Texten i infobubblan syns nu tydligt på den mörka bubblan.
+
 ## 0.21.2
 
 - Avataren uppe till höger har en grön plupp när du är inloggad och appen har nät, och en grå ihålig ring när nätet saknas – samma som i alla Kodhäst-appar (web-ui 3.1.0).
