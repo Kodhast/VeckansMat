@@ -3,23 +3,29 @@
 	import type { ShoppingItem } from './server/db/shopping.ts';
 	import { stepAmount } from './shopping.ts';
 
-	// How much of an item to buy, changed by hand (#163): a field with − and + for its first number,
-	// what Claude worked out, and the way back to it. The amount is free text, as Claude writes it.
+	// An item changed by hand: its text (#208) and how much to buy (#163), with − and + for the
+	// amount's first number, what Claude wrote and worked out, and the way back to it. Both are free
+	// text, as Claude writes them.
 	let {
 		item,
+		focus = 'amount',
 		dishes,
 		onsave,
 		onreset,
+		onresettext,
 		onkeep,
 		ontake,
 		onclose
 	}: {
-		/** The item whose amount is changed, or null when the sheet is closed. */
+		/** The item that is changed, or null when the sheet is closed. */
 		item: ShoppingItem | null;
+		/** The field the sheet opens at: the text from Ändra, the amount from the amount. */
+		focus?: 'text' | 'amount';
 		/** The dishes it is for, as one line, or empty. */
 		dishes: string;
-		onsave: (amount: string) => void;
+		onsave: (text: string, amount: string) => void;
 		onreset: () => void;
+		onresettext: () => void;
 		/** Keeps the amount changed by hand, when the dishes changed since (#197). */
 		onkeep: () => void;
 		/** Takes what Claude counts now instead. */
@@ -27,21 +33,30 @@
 		onclose: () => void;
 	} = $props();
 
+	let text = $state('');
 	let draft = $state('');
+	let textField: HTMLInputElement | undefined = $state();
+	let amountField: HTMLInputElement | undefined = $state();
 	// The sheet keeps the last item while it closes, so that its text does not go blank first.
 	let shown = $state<ShoppingItem | null>(null);
 	$effect.pre(() => {
 		if (!item) return;
 		shown = item;
+		text = item.text;
 		draft = item.amount ?? '';
+	});
+	$effect(() => {
+		if (item) (focus === 'text' ? textField : amountField)?.focus();
 	});
 
 	let claudes = $derived(shown?.amountEdited ? shown.amountBefore : shown?.amount);
 	let fromClaude = $derived(shown?.origin === 'claude');
 	let less = $derived(stepAmount(draft, -1));
 	let more = $derived(stepAmount(draft, 1));
-	// Asks to keep or take Claude's only while the amount is as it was; one written in is saved.
-	let asks = $derived(!!shown?.amountChange && draft === (shown.amount ?? ''));
+	// Asks to keep or take Claude's only while the item is as it was; one written in is saved.
+	let asks = $derived(
+		!!shown?.amountChange && draft === (shown.amount ?? '') && text === shown.text
+	);
 	const CHANGES = {
 		added: 'En ny rätt behöver den här varan',
 		removed: 'En rätt är borta från veckan',
@@ -50,52 +65,73 @@
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
-		onsave(draft);
+		onsave(text, draft);
 	}
 </script>
 
-<Sheet open={!!item} title={shown?.text ?? ''} {onclose}>
+<Sheet open={!!item} title="Ändra varan" {onclose}>
 	{#if dishes}<p class="kh-sheet__subtitle">Till {dishes}</p>{/if}
 	{#if shown?.amountChange}
 		<div class="change">
 			<strong>{CHANGES[shown.amountChange]}</strong>
 			<span>
-				Du ändrade till {shown.amount ?? 'ingen mängd'} innan.
+				{shown.amountEdited
+					? `Du ändrade till ${shown.amount ?? 'ingen mängd'} innan.`
+					: `Listan har ${shown.amount ?? 'ingen mängd'}.`}
 				{shown.amountSuggested
 					? `Claude räknar nu ${shown.amountSuggested}.`
 					: 'Claude har ingen ny mängd.'}
 			</span>
 		</div>
 	{/if}
-	<form id="amount-form" onsubmit={submit}>
-		<button
-			type="button"
-			class="kh-stepper__button kh-stepper__button--decrease"
-			aria-label="Mindre"
-			disabled={less === draft}
-			onclick={() => (draft = less)}
-		></button>
+	<form id="item-form" onsubmit={submit}>
 		<label class="kh-field">
 			<input
 				class="kh-field__input"
-				bind:value={draft}
+				bind:value={text}
+				bind:this={textField}
 				placeholder=" "
 				autocomplete="off"
-				enterkeyhint="done"
-				maxlength="40"
+				enterkeyhint="next"
+				maxlength="200"
+				required
 			/>
-			<span class="kh-field__label">Mängd</span>
+			<span class="kh-field__label">Vara</span>
 		</label>
-		<button
-			type="button"
-			class="kh-stepper__button kh-stepper__button--increase"
-			aria-label="Mer"
-			disabled={more === draft}
-			onclick={() => (draft = more)}
-		></button>
+		<div class="amount">
+			<button
+				type="button"
+				class="kh-stepper__button kh-stepper__button--decrease"
+				aria-label="Mindre"
+				disabled={less === draft}
+				onclick={() => (draft = less)}
+			></button>
+			<label class="kh-field">
+				<input
+					class="kh-field__input"
+					bind:value={draft}
+					bind:this={amountField}
+					placeholder=" "
+					autocomplete="off"
+					enterkeyhint="done"
+					maxlength="40"
+				/>
+				<span class="kh-field__label">Mängd</span>
+			</label>
+			<button
+				type="button"
+				class="kh-stepper__button kh-stepper__button--increase"
+				aria-label="Mer"
+				disabled={more === draft}
+				onclick={() => (draft = more)}
+			></button>
+		</div>
 	</form>
 	{#if fromClaude && !shown?.amountChange}
-		<p class="claude">Claude räknade {claudes || 'ingen mängd'}</p>
+		<p class="claude">
+			{shown?.textBefore ? `Claude skrev ${shown.textBefore} och räknade` : 'Claude räknade'}
+			{claudes || 'ingen mängd'}
+		</p>
 	{/if}
 	<div class="kh-sheet__footer">
 		{#if asks}
@@ -114,19 +150,34 @@
 </Sheet>
 
 {#snippet footer()}
-	{#if shown?.amountEdited}
-		<button type="button" class="kh-btn kh-btn--text" onclick={onreset}>
-			{fromClaude ? 'Som Claude räknade' : 'Som förut'}
+	{#if shown?.textBefore}
+		<button type="button" class="kh-btn kh-btn--text" onclick={onresettext}>
+			{fromClaude ? 'Som Claude skrev' : 'Texten som förut'}
 		</button>
 	{/if}
-	<button type="submit" form="amount-form" class="kh-btn kh-btn--primary save">Spara</button>
+	{#if shown?.amountEdited}
+		<button type="button" class="kh-btn kh-btn--text" onclick={onreset}>
+			{fromClaude ? 'Som Claude räknade' : 'Mängden som förut'}
+		</button>
+	{/if}
+	<button type="submit" form="item-form" class="kh-btn kh-btn--primary save">Spara</button>
 {/snippet}
 
 <style>
 	form {
 		display: flex;
+		flex-direction: column;
+		gap: var(--kh-space-m);
+	}
+
+	.amount {
+		display: flex;
 		align-items: center;
 		gap: var(--kh-space-s);
+	}
+
+	.amount .kh-field {
+		flex: 1;
 	}
 
 	/* The field's label stands on its edge, which the margin above makes room for. */
@@ -154,6 +205,10 @@
 
 	.change strong {
 		font: var(--kh-type-item-title);
+	}
+
+	.kh-sheet__footer {
+		flex-wrap: wrap;
 	}
 
 	.save {

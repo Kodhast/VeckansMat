@@ -4,9 +4,11 @@
 	// An item on the shopping list (web-ui's kh-check-row in a kh-swipe, as CheckRow and SwipeToHide
 	// in android-ui): tick it off, see which dishes it is for, or swipe it away to the left, which
 	// the snackbar can undo (android-ui #118); Ta bort also stands last in the row's popup. The
-	// amount is a button of its own, which opens the sheet to change it (#163).
+	// amount is a button of its own, which opens the sheet to change it (#163); Ändra in the popup
+	// opens the same sheet at the item's text (#208).
 	let {
 		text,
+		textEdited = false,
 		amount,
 		amountEdited = false,
 		question = '',
@@ -15,9 +17,12 @@
 		checked,
 		oncheck,
 		onamount,
+		onedit,
 		onremove
 	}: {
 		text: string;
+		/** Whether the text was changed by hand, which the pen after it shows. */
+		textEdited?: boolean;
 		amount: string | null;
 		/** Whether the amount was changed by hand, which the pen beside it shows. */
 		amountEdited?: boolean;
@@ -30,6 +35,7 @@
 		checked: boolean;
 		oncheck: (checked: boolean) => void;
 		onamount: () => void;
+		onedit: () => void;
 		onremove: () => void;
 	} = $props();
 
@@ -60,6 +66,11 @@
 		info?.hidePopover();
 		onremove();
 	}
+
+	function edit() {
+		info?.hidePopover();
+		onedit();
+	}
 </script>
 
 <li>
@@ -76,7 +87,11 @@
 					/>
 				</span>
 				<span class="kh-row__text">
-					<span class="kh-row__title">{text}</span>
+					<span class="kh-row__title">
+						{text}{#if textEdited}<span class="pen" role="img" aria-label="ändrad för hand">
+								<Icon name="edit" />
+							</span>{/if}
+					</span>
 					{#if question}<span class="kh-row__subtitle question">{question}</span>{/if}
 				</span>
 			</label>
@@ -95,8 +110,11 @@
 					<strong>Till</strong>
 					<span>{dishes}</span>
 				{/if}
-				{#if note}<span class="note">{note}</span>{/if}
-				<button type="button" class="remove" aria-label="Ta bort {text}" onclick={remove}>
+				{#if note}<span class="popup-note">{note}</span>{/if}
+				<button type="button" class="action" aria-label="Ändra {text}" onclick={edit}>
+					<Icon name="edit" />Ändra
+				</button>
+				<button type="button" class="action" aria-label="Ta bort {text}" onclick={remove}>
 					<Icon name="delete" />Ta bort
 				</button>
 			</div>
@@ -203,7 +221,7 @@
 		color: var(--kh-primary);
 	}
 
-	.popup .note {
+	.popup-note {
 		margin-top: 0.25rem;
 	}
 
@@ -235,7 +253,7 @@
 		opacity: 0.8;
 	}
 
-	.popup .remove {
+	.popup .action {
 		margin: 0.375rem 0 0 -0.25rem;
 		padding: 0.25rem;
 		border: 0;
@@ -248,7 +266,21 @@
 		cursor: pointer;
 	}
 
-	.popup .remove :global(svg) {
+	.popup .action + .action {
+		margin-top: 0;
+	}
+
+	.popup .action :global(svg) {
 		width: 1rem;
+	}
+
+	.pen {
+		margin-inline-start: 0.375rem;
+		color: var(--kh-primary);
+		vertical-align: -0.125rem;
+	}
+
+	.pen :global(svg) {
+		width: 0.875rem;
 	}
 </style>
